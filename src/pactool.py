@@ -30,7 +30,7 @@
 #                                                                        #
 ##########################################################################
 
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from sys import exit as sysExit
 
 
@@ -100,61 +100,46 @@ class Pactool:
 
 
     def createParser(self) -> ArgumentParser:
-        parser = ArgumentParser(description=f"Pactool {self.release} - {self.description}")
+        parser = ArgumentParser(
+            prog="pactool.py",
+            description=(
+                "Pactool 1.0.0 - A cross-distro package management helper for Linux systems.\n\n"
+                "\nExamples:\n"
+                "  python3 pactool.py --list\n"
+                "  python3 pactool.py --search firefox\n"
+                "  python3 pactool.py --install vlc --user\n"
+            ),
+            formatter_class=RawTextHelpFormatter
+        )
 
 
         ##########################################################################
         #                                GENERAL                                 #
         ##########################################################################
-        generalGroup = parser.add_argument_group("General Commands")
-        generalGroup.add_argument("--version", action="version", version=f"Pactool {self.release}")
-        generalGroup.add_argument("--ping", action="store_true", help="Checks if Pactool is working (returns Pong)")
-        generalGroup.add_argument("--info", action="store_true", help="Displays information about Pactool")
+        general = parser.add_argument_group("General Commands")
+        general.add_argument("--version", action="store_true", help="Show Pactool version and exit")
+        general.add_argument("--ping", action="store_true", help="Check if Pactool is working (returns Pong)")
+        general.add_argument("--info", action="store_true", help="Display detailed information about Pactool")
 
 
 
         ##########################################################################
         #                                self.packages.                               #
         ##########################################################################
-        packageGroup = parser.add_argument_group("Package Commands")
-        packageGroup.add_argument(
-            "--list", action="store_true", help="Lists installed packages (paged by default)"
-        )
-        packageGroup.add_argument(
-            "-n", type=int, default=None,
-            help="Number of packages to show (use 0 for all)"
-        )
-        packageGroup.add_argument("--stats", action="store_true", help="Shows package statistics")
-        packageGroup.add_argument("--search", type=str, help="Search for a package by name")
-        packageGroup.add_argument("--uninstall", type=str, help="Uninstall a package by name")
-        packageGroup.add_argument("--install", type=str, help="Install a package by name")
-        packageGroup.add_argument("--update", action="store_true", help="Updates all installed packages")
-        packageGroup.add_argument("--upgrade", action="store_true", help="Upgrades all installed packages")
-        packageGroup.add_argument(
-            "--sort",
-            type=str,
-            choices=["name", "size", "install-date", "update-date"],
-            help="Sort packages by 'name', 'size', 'install-date', or 'update-date'"
-        )
-        packageGroup.add_argument(
-            "--rsort",
-            type=str,
-            choices=["name", "size", "install-date", "update-date"],
-            help="Reverse sort packages by 'name', 'size', 'install-date', or 'update-date'"
-        )
-        packageGroup.add_argument(
-            "--user",
-            action="store_true",
-            help="Show only user-installed packages"
-        )
-        packageGroup.add_argument(
-            "--system",
-            action="store_true",
-            help="Show only system packages"
-        )
+        pkg = parser.add_argument_group("Package Commands")
+        pkg.add_argument("--list", action="store_true", help="List installed packages (paged by default)")
+        pkg.add_argument("-n", type=int, metavar="N", help="Number of packages to show (0 = all)")
+        pkg.add_argument("--stats", action="store_true", help="Show statistics about packages")
+        pkg.add_argument("--search", metavar="SEARCH", help="Search for a package by name")
+        pkg.add_argument("--uninstall", metavar="PACKAGE", help="Uninstall a package by name")
+        pkg.add_argument("--install", metavar="PACKAGE", help="Install a package by name")
+        pkg.add_argument("--update", action="store_true", help="Update all installed packages")
+        pkg.add_argument("--upgrade", action="store_true", help="Upgrade all installed packages")
 
 
-
+        sortChoices = "name/size/install-date/update-date/type"
+        pkg.add_argument("--sort", metavar="CRITERIA", help=f"{sortChoices}")
+        pkg.add_argument("--rsort", metavar="CRITERIA", help=f"{sortChoices}")
         return parser
 
 

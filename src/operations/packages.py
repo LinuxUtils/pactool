@@ -100,6 +100,7 @@ class Packages:
                 pkg = items[endIndex]
                 pkgLines = 1
                 
+                
                 # ==> NAME & DESCRIPTION
                 if isinstance(pkg, tuple) and pkg[1]:
                     pkgLines += 2
@@ -141,14 +142,18 @@ class Packages:
                 print(Formatter.colorText("No packages found.", Formatter.red, Formatter.bold))
                 return
 
+            # ==> GET ALL USER PACKAGES ONCE
+            userPkgs = self._getUserPackages()
 
-            # ==> FILTER USER/SYSTEM PACKAGES
+            # ==> TAG EACH PACKAGE AS USER OR SYSTEM
+            for pkg in packageList:
+                pkg["isUser"] = pkg["name"] in userPkgs
+
+            # ==> FILTER IF USER OR SYSTEM FLAGS ARE SET
             packageList = self._filterPackages(packageList, showUser, showSystem)
 
-
-            # ==> SORT PACKAGES BASED ON sortBy (reverse if needed)
+            # ==> SORT
             packageList = self._sortPackages(packageList, sortBy, reverseSort)
-
 
             # ==> WIDTH CALCULATION
             nameWidth = max(len(pkg["name"]) for pkg in packageList)
@@ -158,22 +163,19 @@ class Packages:
                 max(len(pkg["installed"]) for pkg in packageList),
                 max(len(pkg["updated"]) for pkg in packageList)
             )
-            
 
             def renderChunk(chunk, startIndex=0):
                 self._printPackages(chunk, nameWidth, sizeValWidth, sizeUnitWidth, dateWidth, startIndex=startIndex)
 
-
             self._paginate(packageList, renderChunk, limit)
-
 
         except CalledProcessError as error:
             logError(f"Failed to list packages ({error})")
 
 
-    
-    
-    
+        
+        
+        
     
     
     
@@ -191,9 +193,12 @@ class Packages:
             key = lambda p: p.get("installedTs", 0)
         elif sortBy == "update-date":
             key = lambda p: p.get("updatedTs", 0)
+        elif sortBy == "type":
+            key = lambda p: (0 if p.get("isUser", False) else 1, p["name"].lower())
 
 
         return sorted(pkgs, key=key, reverse=reverse) if key else pkgs
+
 
 
 
@@ -288,7 +293,11 @@ class Packages:
             sizeText = f"{pkg['sizeValue']:<{sizeValWidth}} {pkg['sizeUnit']:<{sizeUnitWidth}}"
             installedText = f"{pkg['installed']:<{dateWidth}}"
             updatedText = f"{pkg['updated']:<{dateWidth}}"
+
+
+            # ==> DETERMINE COLOR BASED ON USER VS SYSTEM
             packageColor = Formatter.userPackageColor if pkg.get("isUser", False) else Formatter.systemPackageColor
+
 
             print(
                 f"{Formatter.bold}{i:<4}{Formatter.reset} "
@@ -297,6 +306,7 @@ class Packages:
                 f"Installed {Formatter.colorText(installedText, Formatter.dateColor)}  "
                 f"Updated {Formatter.colorText(updatedText, Formatter.dateColor)}"
             )
+
 
 
 
