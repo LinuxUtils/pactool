@@ -189,7 +189,7 @@ class Main:
         kernel.add_argument(
             "--backup-kernel",
             action="store_true",
-            help="Backup the currently running kernel to /boot/backup/"
+            help="Backup the current running kernel to /boot/pactool/backup"
         )
 
 
