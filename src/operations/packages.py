@@ -453,10 +453,6 @@ class Packages:
             reverseMap = self._buildReverseDepMap()
 
 
-            print(Formatter.colorText(f"\nReverse dependency tree for '{packageName}':", Formatter.headerColor, Formatter.bold))
-            print()
-
-
             self._drawTree(packageName, reverseMap)
             
             
