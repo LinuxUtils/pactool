@@ -139,6 +139,7 @@ class Main:
         pkg.add_argument("--install", metavar="PACKAGE", help="Install a package by name")
         pkg.add_argument("--update", action="store_true", help="Update all installed packages")
         pkg.add_argument("--upgrade", action="store_true", help="Upgrade all installed packages")
+        pkg.add_argument("--clean", action="store_true", help="Clean cached or unused package files")
         sortChoices = "name/size/install-date/update-date/type"
         pkg.add_argument("--sort", metavar="CRITERIA", help=f"{sortChoices}")
         pkg.add_argument("--rsort", metavar="CRITERIA", help=f"{sortChoices}")
@@ -196,6 +197,9 @@ class Main:
                 self.packages.update()
             elif args.upgrade:
                 self.packages.upgrade()
+            elif args.clean:
+                self.packages.clean()
+
             
             
             # ==> MIRROR COMMANDS

@@ -28,8 +28,7 @@
 ##########################################################################
 
 from shutil import get_terminal_size
-from subprocess import run, CalledProcessError
-from shutil import which
+from subprocess import run, CalledProcessError, DEVNULL
 from datetime import datetime
 from os import stat
 from re import search
@@ -998,3 +997,38 @@ class Packages:
                 
                 
         return packageName.split()[0] in self._cachedUserPkgs
+    
+    
+    
+    
+    
+    
+    
+    
+    def clean(self) -> None:
+        try:
+            # ==> CLEAN APT PACKAGE CACHE
+            if self.pactool.manager.defaultPackageManager == "apt":
+                print(Formatter.colorText("Cleaning APT package cache...", Formatter.yellow, Formatter.bold))
+                run(["sudo", "apt-get", "clean"], stdout=DEVNULL, stderr=DEVNULL, check=False)
+                run(["sudo", "apt-get", "autoremove", "-y"], stdout=DEVNULL, stderr=DEVNULL, check=False)
+                print(Formatter.colorText("\nAPT package cache cleaned.", Formatter.green, Formatter.bold))
+
+
+            # ==> CLEAN PACMAN PACKAGE CACHE
+            elif self.pactool.manager.defaultPackageManager == "pacman":
+                print(Formatter.colorText("Cleaning Pacman package cache...", Formatter.yellow, Formatter.bold))
+                run(["sudo", "pacman", "-Scc", "--noconfirm"], stdout=DEVNULL, stderr=DEVNULL, check=False)
+                print(Formatter.colorText("\nPacman package cache cleaned.", Formatter.green, Formatter.bold))
+
+            else:
+                print(Formatter.colorText("\nNo supported package manager found for cleaning.", Formatter.red))
+
+
+        except Exception as error:
+            logError(f"\nFailed to clean package cache ({error})")
+            
+            
+        # ==> SHOW THE NEW STATS
+        print()
+        self.stats()
