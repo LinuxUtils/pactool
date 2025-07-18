@@ -34,6 +34,9 @@ from pathlib import Path
 from logging import basicConfig, info, error, INFO
 
 
+# ==> PACTOOL FILES
+from core.formatter import Formatter
+
 
 # ==> CREATE LOG DIRECTORY
 logDir = Path.home() / ".cache" / "pactool" / "logs"
@@ -65,7 +68,9 @@ def logSuccess(message: str):
     """
     Logs a success message to today's Pactool log file.
     """
-    info(message)
+    cleanString = message.replace("\n", "").replace("\r", "")
+    print(Formatter.colorText(message, Formatter.green, Formatter.bold))
+    info(cleanString)
 
 
 
@@ -75,4 +80,6 @@ def logError(message: str):
     """
     Logs an error message to today's Pactool log file.
     """
-    error(message)
+    cleanString = message.replace("\n", "").replace("\r", "")
+    print(Formatter.colorText(message, Formatter.red, Formatter.bold))
+    error(cleanString)

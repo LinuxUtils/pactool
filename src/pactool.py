@@ -36,7 +36,8 @@ from sys import exit as sysExit
 
 # ==> PACTOOL FILES
 from core.logger import logSuccess, logError
-
+from core.formatter import Formatter
+from operations.packages import Packages
 
 
 
@@ -45,20 +46,18 @@ from core.logger import logSuccess, logError
 #                                 MAIN                                   #
 #                                                                        #
 ##########################################################################
-class Formatter():
-    tab4 = " " * 4
-    tab8 = " " * 8
-    point = "•"
-
-
-
 
 
 class Pactool:
     def __init__(self) -> None:
+        # ==> GENERAL INFO
         self.description = "A cross-distro package management helper for Linux systems."
         self.release = "1.0.0"
         self.releaseDate = "18/7/2025"
+
+
+        # ==> CREATE OBJECTS
+        self.packages = Packages()
 
 
 
@@ -102,10 +101,41 @@ class Pactool:
 
     def createParser(self) -> ArgumentParser:
         parser = ArgumentParser(description=f"Pactool {self.release} - {self.description}")
-        parser.add_argument("--version", action="version", version=f"Pactool {self.release}")
-        parser.add_argument("--ping", action="store_true", help="Checks if Pactool is working (returns Pong)")
-        parser.add_argument("--info", action="store_true", help="Displays information about Pactool")
+
+
+        ##########################################################################
+        #                                GENERAL                                 #
+        ##########################################################################
+        generalGroup = parser.add_argument_group("General Commands")
+        generalGroup.add_argument("--version", action="version", version=f"Pactool {self.release}")
+        generalGroup.add_argument("--ping", action="store_true", help="Checks if Pactool is working (returns Pong)")
+        generalGroup.add_argument("--info", action="store_true", help="Displays information about Pactool")
+
+
+
+        ##########################################################################
+        #                                self.packages.                               #
+        ##########################################################################
+        packageGroup = parser.add_argument_group("Package Commands")
+        packageGroup.add_argument(
+            "--list", action="store_true", help="Lists installed packages (paged by default)"
+        )
+        packageGroup.add_argument(
+            "-n", type=int, default=None,
+            help="Number of packages to show (use 0 for all)"
+        )
+        packageGroup.add_argument("--stats", action="store_true", help="Shows package statistics")
+        packageGroup.add_argument("--search", type=str, help="Search for a package by name")
+        packageGroup.add_argument("--uninstall", type=str, help="Uninstall a package by name")
+        packageGroup.add_argument("--install", type=str, help="Install a package by name")
+        packageGroup.add_argument("--update", action="store_true", help="Updates all installed packages")
+        packageGroup.add_argument("--upgrade", action="store_true", help="Upgrades all installed packages")
+
+
         return parser
+
+
+
 
 
 
@@ -120,15 +150,50 @@ class Pactool:
                 self.ping()
             elif args.info:
                 self.info()
+
+            # ==> PACKAGE COMMANDS
+            elif args.list:
+                self.packages.list(args.n)
+            elif args.stats:
+                self.packages.stats(args.n)
+            elif args.search:
+                self.packages.search(args.search, args.n)
+            elif args.uninstall:
+                self.packages.uninstall(args.uninstall)
+            elif args.install:
+                self.packages.install(args.install)
+            elif args.update:
+                self.packages.update()
+            elif args.upgrade:
+                self.packages.upgrade()
             else:
                 self.baseMessage()
-
 
             self.quit(code=0)
 
 
-        except Exception as error:
-            self.quit(f"Unhandled exception in main execution ({error})", 1)
+        except BaseException as error:
+            errorName = type(error).__name__
+            
+            # ==> IGNORE CLEAN EXITS
+            if errorName == "SystemExit":
+                if getattr(error, "code", 1) == 0:
+                    self.quit(0)
+                else:
+                    logError(f"\nUnhandled SystemExit in main execution ({error})")
+                    self.quit(error.code if isinstance(error.code, int) else 1)
+
+
+            # ==> IGNORE CTRL+C
+            elif errorName == "KeyboardInterrupt":
+                self.quit(0)
+
+
+            # ==> HANDLE ALL OTHER ERRORS
+            else:
+                logError(f"\nUnhandled exception in main execution ({error})")
+                self.quit(1)
+
 
 
 
