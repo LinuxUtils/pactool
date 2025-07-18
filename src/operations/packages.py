@@ -28,7 +28,7 @@
 ##########################################################################
 
 from shutil import get_terminal_size
-from subprocess import run, CalledProcessError, DEVNULL
+from subprocess import run, CalledProcessError, DEVNULL, PIPE
 from datetime import datetime
 from os import stat
 from re import search
@@ -1435,3 +1435,102 @@ class Packages:
 
         except Exception as error:
             logError(f"Failed to check unused packages ({error})")
+            
+            
+            
+            
+            
+            
+            
+            
+            
+    # ==> LIST ALL OUTDATED PACKAGES
+    def outdated(self, limit: int = None) -> None:
+        try:
+            # ==> PRINT HEADER
+            print(Formatter.colorText("\nChecking for outdated packages...\n", Formatter.headerColor, Formatter.bold))
+
+
+            outdatedPkgs = []
+            userPkgs = set(self._getUserPackages())
+
+
+            # ==> PACMAN IMPLEMENTATION
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                # ==> RUN PACMAN SYNC TO LIST OUTDATED PACKAGES
+                result = run(["pacman", "-Qu"], capture_output=True, text=True, check=False)
+
+
+                for line in result.stdout.splitlines():
+                    # ==> FORMAT (packageName currentVersion -> newVersion)
+                    parts = line.split()
+                    if len(parts) >= 4:
+                        outdatedPkgs.append((parts[0], parts[1], parts[3]))
+
+
+            # ==> APT IMPLEMENTATION
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                # ==> UPDATE PACKAGE INFO
+                run(["sudo", "apt", "update"], stdout=PIPE, stderr=PIPE, text=True)
+
+
+                # ==> CHECK OUTDATED PACKAGES USING APT LIST
+                result = run(["apt", "list", "--upgradable"], capture_output=True, text=True, check=False)
+
+
+                for line in result.stdout.splitlines():
+                    # ==> SKIP HEADERS
+                    if "Listing..." in line:
+                        continue
+                    
+                    
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        pkg = parts[0].split("/")[0]
+                        current = parts[1]
+                        newVersion = parts[2] if len(parts) > 2 else "?"
+                        outdatedPkgs.append((pkg, current, newVersion))
+
+
+            # ==> HANDLE EMPTY RESULT
+            if not outdatedPkgs:
+                print(Formatter.colorText("All packages are up-to-date.", Formatter.green))
+                return
+
+
+            # ==> WIDTH CALCULATIONS FOR CLEAN OUTPUT
+            indexWidth = len(str(len(outdatedPkgs)))
+            nameWidth = max(len(pkg[0]) for pkg in outdatedPkgs) + 2
+            currentWidth = max(len(pkg[1]) for pkg in outdatedPkgs) + 2
+            newWidth = max(len(pkg[2]) for pkg in outdatedPkgs) + 2
+
+
+            # ==> GET USER PACKAGES TO DETERMINE COLOR
+            userPkgs = self._getUserPackages()
+
+
+            # ==> DISPLAY OUTDATED PACKAGES HEADER
+            print(Formatter.colorText("Outdated Packages:\n", Formatter.headerColor, Formatter.bold))
+
+
+            # ==> RENDER FUNCTION FOR PAGINATION
+            def renderChunk(chunk, startIndex=0):
+                for i, (pkg, current, new) in enumerate(chunk, start=startIndex + 1):
+                    # ==> DETERMINE COLOR BASED ON USER OR SYSTEM PACKAGE
+                    color = Formatter.magenta if pkg in userPkgs else Formatter.blue
+
+
+                    print(
+                        f"  {Formatter.bold}{Formatter.white}{str(i).rjust(indexWidth)}{Formatter.reset}. "
+                        f"{Formatter.colorText(pkg.ljust(nameWidth), color)} "
+                        f"{Formatter.colorText(current.ljust(currentWidth), Formatter.cyan)} -> "
+                        f"{Formatter.colorText(new.ljust(newWidth), Formatter.yellow)}"
+                    )
+
+
+            # ==> PAGINATE OUTPUT
+            self._paginate(outdatedPkgs, renderChunk, limit)
+
+
+        except Exception as error:
+            logError(f"Failed to list outdated packages ({error})")

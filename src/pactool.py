@@ -152,6 +152,7 @@ class Main:
         pkg.add_argument("--info", metavar="PACKAGE", help="Show detailed information about a specific package")
         pkg.add_argument("--bloat", action="store_true", help="Find unused optional dependencies (bloat)")
         pkg.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
+        pkg.add_argument("--outdated", action="store_true", help="List all outdated packages (newer version available)")
 
                 
                 
@@ -227,9 +228,10 @@ class Main:
                 self.packages.bloat(args.n)
             elif args.unused:
                 self.packages.unused(args.n)
+            elif args.outdated:
+                self.packages.outdated(args.n)
 
-                
-                
+ 
                 
             # ==> SERVICE COMMANDS
             elif args.services:
