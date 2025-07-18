@@ -803,6 +803,53 @@ class Packages:
         except Exception as error:
             logError(f"Failed to fetch package statistics ({error})")
 
+    
+    
+    
+    
+    
+    
+    
+    def listFiles(self, packageName: str) -> None:
+        try:
+            # ==> CHECK IF PACKAGE EXISTS
+            if not self._packageExists(packageName):
+                print(Formatter.colorText(f"Package '{packageName}' not found.", Formatter.red))
+                return
+
+
+
+            print(Formatter.colorText(f"\nFiles installed by '{packageName}':", Formatter.headerColor, Formatter.bold))
+            print()
+
+
+
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                result = run(["pacman", "-Ql", packageName], capture_output=True, text=True, check=False)
+                files = [line.split(maxsplit=1)[1] for line in result.stdout.splitlines()]
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                result = run(["dpkg", "-L", packageName], capture_output=True, text=True, check=False)
+                files = result.stdout.splitlines()
+            else:
+                print(Formatter.colorText("No supported package manager found.", Formatter.red))
+                return
+
+
+
+            if not files or all(f.strip() == "" for f in files):
+                print(Formatter.colorText(f"No files found for package '{packageName}'.", Formatter.yellow))
+                return
+
+
+
+            for f in files:
+                print(f"{Formatter.tab4}{f}")
+
+
+        except Exception as error:
+            logError(f"Failed to list files for '{packageName}' ({error})")
+
+
 
 
 
