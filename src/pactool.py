@@ -150,8 +150,11 @@ class Main:
         pkg.add_argument("--user", action="store_true", help="Show only user-installed packages")
         pkg.add_argument("--system", action="store_true", help="Show only system packages")
         pkg.add_argument("--info", metavar="PACKAGE", help="Show detailed information about a specific package")
-        
-        
+        pkg.add_argument("--bloat", action="store_true", help="Find unused optional dependencies (bloat)")
+        pkg.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
+
+                
+                
         ##########################################################################
         #                                 Services                               #
         ##########################################################################
@@ -220,6 +223,11 @@ class Main:
                 self.packages.clean()
             elif args.info:
                 self.packages.info(args.info)   
+            elif args.bloat:
+                self.packages.bloat(args.n)
+            elif args.unused:
+                self.packages.unused(args.n)
+
                 
                 
                 

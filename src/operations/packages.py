@@ -1298,3 +1298,140 @@ class Packages:
                 for dep in dependencies:
                     print(f"  └─ {Formatter.colorText(dep, Formatter.green)}")
 
+
+
+
+
+
+
+    # ==> FIND UNUSED OPTIONAL DEPENDENCIES (BLOAT)
+    def bloat(self, limit: int = None) -> None:
+        try:
+            # ==> PRINT HEADER
+            print(Formatter.colorText("\nAnalyzing for bloat (unused optional dependencies)...\n", Formatter.headerColor, Formatter.bold))
+
+
+
+            bloatList = []
+            userPkgs = set(self._getUserPackages())
+
+
+
+            # ==> PACMAN IMPLEMENTATION
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                result = run(["pacman", "-Qi"], capture_output=True, text=True, check=False)
+                currentPkg = None
+
+                for line in result.stdout.splitlines():
+                    if line.startswith("Name"):
+                        currentPkg = line.split(":", 1)[1].strip()
+                    elif line.startswith("Optional Deps") and currentPkg:
+                        if "None" not in line:
+                            bloatList.append(currentPkg)
+
+
+
+            # ==> APT IMPLEMENTATION
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                installedPkgs = run(
+                    ["dpkg-query", "-f", "${binary:Package}\n", "-W"],
+                    capture_output=True,
+                    text=True
+                ).stdout.splitlines()
+
+
+
+                for pkg in installedPkgs:
+                    info = run(["apt-cache", "show", pkg], capture_output=True, text=True).stdout
+                    for line in info.splitlines():
+                        if line.startswith("Recommends:") or line.startswith("Suggests:"):
+                            bloatList.append(pkg)
+                            break
+
+
+
+            # ==> DISPLAY RESULTS
+            if bloatList:
+                print(Formatter.colorText("Packages with unused optional dependencies:\n", Formatter.yellow))
+                
+                
+                # ==> WIDTH OF THE INDEX COLUMN
+                indexWidth = len(str(len(bloatList)))
+                
+                
+                # ==> WIDTH OF PACKAGE NAME COLUMN
+                nameWidth = max(len(pkg) for pkg in bloatList) + 2
+
+
+                def renderChunk(chunk, startIndex=0):
+                    for i, pkg in enumerate(chunk, start=startIndex + 1):
+                        color = Formatter.magenta if pkg in userPkgs else Formatter.blue
+                        print(f"  {Formatter.bold}{Formatter.white}{str(i).rjust(indexWidth)}{Formatter.reset}. {Formatter.colorText(pkg.ljust(nameWidth), color)}")
+
+
+                self._paginate(bloatList, renderChunk, limit)
+            else:
+                print(Formatter.colorText("No bloat detected.", Formatter.green))
+
+
+        except Exception as error:
+            logError(f"Failed to check bloat ({error})")
+
+
+
+
+
+
+
+
+
+    # ==> FIND UNUSED ORPHANED PACKAGES
+    def unused(self, limit: int = None) -> None:
+        try:
+            # ==> PRINT HEADER
+            print(Formatter.colorText("\nFinding unused (Orphan) packages...\n", Formatter.headerColor, Formatter.bold))
+
+
+            # ==> CHECK FOR PACMAN PACKAGE MANAGER
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                result = run(["pacman", "-Qdtq"], capture_output=True, text=True, check=False)
+                orphaned = result.stdout.splitlines()
+
+
+            # ==> CHECK FOR APT PACKAGE MANAGER
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                result = run(["apt-mark", "showauto"], capture_output=True, text=True, check=False)
+                orphaned = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+            else:
+                orphaned = []
+
+
+            # ==> HANDLE NO UNUSED PACKAGES FOUND
+            if not orphaned:
+                print(Formatter.colorText("No unused packages found.", Formatter.green))
+                return
+
+
+            # ==> DISPLAY HEADER
+            print(Formatter.colorText("Unused packages:\n", Formatter.yellow))
+
+
+            # ==> CALCULATE WIDTHS
+            indexWidth = len(str(len(orphaned)))
+            nameWidth = max(len(pkg) for pkg in orphaned) + 2
+
+
+            # ==> RENDER FUNCTION
+            def renderChunk(chunk, startIndex=0):
+                for i, pkg in enumerate(chunk, start=startIndex + 1):
+                    print(f"  {Formatter.bold}{Formatter.white}{str(i).rjust(indexWidth)}{Formatter.reset}. {Formatter.colorText(pkg.ljust(nameWidth), Formatter.magenta)}")
+
+
+            # ==> PAGINATE RESULTS
+            self._paginate(orphaned, renderChunk, limit)
+
+
+        except Exception as error:
+            logError(f"Failed to check unused packages ({error})")
