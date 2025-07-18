@@ -432,9 +432,147 @@ class Packages:
             
             
         return result
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    def why(self, packageName: str) -> None:
+        try:
+            if not self._packageExists(packageName):
+                print(Formatter.colorText(f"Package '{packageName}' not found.", Formatter.red))
+                return
+
+            # ==> PRELOAD ALL REVERSE DEPENDENCIES ONCE
+            reverseMap = self._buildReverseDepMap()
+
+
+            print(Formatter.colorText(f"\nReverse dependency tree for '{packageName}':", Formatter.headerColor, Formatter.bold))
+            print()
+
+
+            self._drawTree(packageName, reverseMap)
+            
+            
+        except Exception as error:
+            logError(f"Failed to check reverse dependencies ({error})")
 
 
 
+
+
+
+
+    def _buildReverseDepMap(self) -> dict:
+        reverseMap = {}
+        
+        
+        
+        # ==> HANDLE PACMAN PACKAGE MANAGER
+        if self.pactool.manager.defaultPackageManager == "pacman":
+            result = run(["pacman", "-Qi"], capture_output=True, text=True, check=False).stdout
+            currentPkg = None
+            
+            
+            # ==> ITERATE OVER EACH LINE OF OUTPUT
+            for line in result.splitlines():
+                if line.startswith("Name            :"):
+                    currentPkg = line.split(":", 1)[1].strip()
+                
+                
+                # ==> DETECT "Required By" LINE FOR THE CURRENT PACKAGE
+                elif line.startswith("Required By     :") and currentPkg:
+                    deps = line.split(":", 1)[1].strip()
+                    reverseMap[currentPkg] = [] if deps == "None" else deps.split()
+                    
+                    
+                    
+                    
+        elif self.pactool.manager.defaultPackageManager == "apt":
+            # ==> GET A LIST OF INSTALLED PACKAGES
+            pkgListResult = run(
+                ["dpkg-query", "-W", "-f=${Package}\n"],
+                capture_output=True, text=True, check=False
+            ).stdout.splitlines()
+
+
+
+            # ==> BUILD REVERSE DEPENDENCY MAP FOR EACH PACKAGE
+            for pkg in pkgListResult:
+                rdependsResult = run(
+                    ["apt-cache", "rdepends", pkg],
+                    capture_output=True, text=True, check=False
+                ).stdout.splitlines()
+
+
+
+                deps = []
+                for line in rdependsResult:
+                    line = line.strip()
+                    
+                    
+                    # ==> SKIP HEADERS
+                    if not line or line.startswith("Reverse Depends:") or line == pkg:
+                        continue
+                    
+                    
+                    # ==> ADD VALID DEPENDENCIES
+                    deps.append(line)
+                
+                
+                reverseMap[pkg] = deps
+            
+        
+        return reverseMap
+
+
+
+
+    
+    
+    
+    
+    
+    def _drawTree(self, pkg: str, reverseMap: dict, depth: int = 0, visited=None) -> None:
+        if visited is None:
+            visited = set()
+            
+            
+        if pkg in visited:
+            return
+        visited.add(pkg)
+
+
+        prefix = "  " * depth + ("└─ " if depth > 0 else "")
+        print(f"{prefix}{Formatter.colorText(pkg, Formatter.green)}")
+
+
+        for dep in reverseMap.get(pkg, []):
+            self._drawTree(dep, reverseMap, depth + 1, visited)
+                
+
+
+
+
+
+
+
+    def _packageExists(self, pkg: str) -> bool:
+        if self.pactool.manager.defaultPackageManager == "pacman":
+            return run(["pacman", "-Qi", pkg], capture_output=True, text=True, check=False).returncode == 0
+        
+        
+        elif self.pactool.manager.defaultPackageManager == "apt":
+            return run(["dpkg", "-s", pkg], capture_output=True, text=True, check=False).returncode == 0
+        
+        
+        return False
 
 
 

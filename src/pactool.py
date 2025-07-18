@@ -135,6 +135,7 @@ class Main:
         pkg.add_argument("-n", type=int, metavar="N", help="Number of packages to show (0 = all)")
         pkg.add_argument("--stats", action="store_true", help="Show statistics about packages")
         pkg.add_argument("--search", metavar="SEARCH", help="Search for a package by name")
+        pkg.add_argument("--why", metavar="PACKAGE", help="Show which packages depend on this package (reverse dependencies)")
         pkg.add_argument("--uninstall", metavar="PACKAGE", help="Uninstall a package by name")
         pkg.add_argument("--install", metavar="PACKAGE", help="Install a package by name")
         pkg.add_argument("--update", action="store_true", help="Update all installed packages")
@@ -189,6 +190,8 @@ class Main:
                 self.packages.stats(args.n)
             elif args.search:
                 self.packages.search(args.search, args.n)
+            elif args.why:
+                self.packages.why(args.why)
             elif args.uninstall:
                 self.packages.uninstall(args.uninstall)
             elif args.install:
