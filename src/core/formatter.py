@@ -71,7 +71,7 @@ class Formatter:
     systemPackageColor = f"{bold}{blue}"
     sizeColor = f"{bold}{green}"
     dateColor = f"{bold}{yellow}"
-    headerColor = f"{bold}{brightWhite}"
+    headerColor = f"{bold}{brightYellow}"
 
 
 
