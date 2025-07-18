@@ -1,43 +1,48 @@
-![PACTOOL BANNER](https://github.com/LinuxUtils/pactool/blob/main/graphics/PACTOOL_BANNER.png?raw=true)
+![PACTOOL BANNER](https://github.com/LinuxUtils/paktool/blob/main/graphics/PACTOOL_BANNER.png?raw=true)
 
 # What is Pactool?
-#### PacTool is a simple and powerful package management helper designed for **Arch Linux** and **Debian-based distributions**. It provides a clear overview of all installed packages and offers tools to optimize your system by managing package sizes and kernel versions.
-
+#### PacTool is a versatile, simple, and powerful package management helper designed for **Arch Linux** and **Debian-based distributions**. It provides a clear and modern overview of all installed packages, their sizes, and dependencies, and offers various tools to optimize and maintain your system efficiently.
 
 ---
 
 ## **Features**
-- **Cross-distro support** (Arch Linux and Debian/Ubuntu).
-- List all installed packages with pagination and sorting.
-- **Filter packages** (user-installed or system).
-- Search, install, uninstall, update, and upgrade packages.
-- **Mirror management**:  
-  - Show current mirrors with latency and last-updated info.  
-  - Automatically update to the fastest mirrors.  
-  - Backup and revert mirrors with timestamps.  
-- **Reverse dependency tree**: `--why PACKAGE`.
-- **File listing**: `--files PACKAGE` (lists all files installed by a package).
-- **Cache cleaning**: `--clean`.
-- Manual mirror backups: `--backup-mirrors`.
-- Color-coded, formatted output.
+- **Cross-distro support** for Arch Linux, Manjaro, Debian, Ubuntu, and other derivatives.
+- **Advanced package listing** with pagination, sorting (name, size, type), and filtering (user/system packages).
+- Full **search, install, uninstall, update, and upgrade** commands.
+- **Mirror management** with support for automatic backups and restores:
+  - Show current mirrors with latency checks and timestamps.
+  - Auto-update mirrors to the fastest available servers.
+  - Backup and revert mirrors using timestamped snapshots.
+- **Dependency & reverse dependency tree** analysis via `--why PACKAGE`.
+- **File ownership**: list all files installed by a package with `--files PACKAGE`.
+- **Cache cleaning** with safe prompts.
+- **Kernel utilities**:
+  - `--cleanup-kernels` for removing outdated kernels safely.
+  - `--backup-kernel` to backup the current kernel and initramfs.
+- **Color-coded, human-friendly output** for better readability.
+- Detailed **statistics** with `--stats` to understand package count, disk usage, and outdated software.
+- **Interactive confirmations** for critical actions like upgrades, removals, or mirror changes.
 
 ---
+
+## **Installation & Setup**
 
 ### Run Directly
 ```bash
 python3 pactool.py --help
 ```
 
-### Add Pactool to PATH
+### Add Pactool to PATH (Global Install)
 ```bash
 sudo cp pactool.py /usr/local/bin/pactool
 sudo chmod +x /usr/local/bin/pactool
 ```
 
 ### Requirements
-- Python 3.8+
+- **Python 3.8+**
 - `reflector` (Arch Linux) or `netselect-apt` (Debian/Ubuntu) for mirror management.
-- `dpkg`, `apt`, or `pacman` must be installed based on your distro.
+- Core package manager tools (`dpkg`, `apt`, or `pacman`) depending on your distro.
+- `sudo` permissions for kernel or mirror-related operations.
 
 ---
 
@@ -93,6 +98,16 @@ python3 pactool.py --list --rsort size
 python3 pactool.py --search vlc
 ```
 
+### **Show Package Info**
+```bash
+python3 pactool.py --info vlc
+```
+
+### **Check for Outdated Packages**
+```bash
+python3 pactool.py --outdated
+```
+
 ---
 
 ## **Mirror Management**
@@ -139,6 +154,26 @@ Reverted mirrors to 2025-07-18_05-44-15
 
 ---
 
+## **Kernel Management**
+Pactool simplifies kernel management on Arch and Debian systems.
+
+### **Cleanup Old Kernels**
+```bash
+python3 pactool.py --cleanup-kernels
+```
+This removes outdated kernels while keeping the current version intact.
+
+### **Backup Current Kernel**
+```bash
+python3 pactool.py --backup-kernel
+```
+Backs up `vmlinuz`, `initramfs`, and optionally `System.map` to:
+```
+/boot/pactool/backup/
+```
+
+---
+
 ## **Advanced Commands**
 
 ### **Reverse Dependency Tree**
@@ -170,7 +205,7 @@ Files installed by 'vlc':
 ```bash
 python3 pactool.py --clean
 ```
-Cleans cache safely and prompts before deletion.
+Cleans package cache and prompts before deleting.
 
 ---
 
@@ -190,24 +225,21 @@ Cleans cache safely and prompts before deletion.
 --update-mirrors    Update to fastest mirrors
 --backup-mirrors    Backup current mirror list
 --revert-mirrors    Revert mirrors to a backup
+--cleanup-kernels   Remove old kernels safely
+--backup-kernel     Backup the current kernel
 ```
 
 ---
 
 ## **Tips and Tricks**
-- Use `--user` to only list user-installed packages.
-- Combine `--list` with `--sort` for a quick overview.
-- Backup mirrors before performing big updates.
-- Use `--why` to diagnose why unnecessary packages are installed.
-
----
-
-## **Roadmap / Planned Features**
-- `--owns FILE`: Find which package owns a file.
-- `--orphans`: List orphaned packages.
-- `--kernel-clean`: Remove old kernels on APT.
-- `--size`: Show disk usage.
-- Interactive shell: `pactool shell`.
+- Use `--user` to list only user-installed packages.
+- Combine `--list` with `--sort` for quick overviews of package size and type.
+- Backup mirrors before performing major upgrades.
+- Use `--why` to track down unnecessary package dependencies.
+- Create a shell alias:
+```bash
+alias pt='python3 /path/to/pactool.py'
+```
 
 ---
 
@@ -217,15 +249,30 @@ Cleans cache safely and prompts before deletion.
 ```bash
 sudo pacman -S reflector
 ```
-(For Debian use `sudo apt install netselect-apt`.)
+For Debian-based systems, use:
+```bash
+sudo apt install netselect-apt
+```
 
 **Q:** Permission errors on mirror updates?  
 **A:** Run with `sudo` or `sudo -E`.
 
+**Q:** Kernel backup fails with missing `vmlinuz`?  
+**A:** Ensure the kernel image path matches `/boot/vmlinuz-*`. Adjust `kernals.py` if needed.
+
 ---
 
 ## **Contributing**
-We welcome contributions! Fork the repo, create a branch, and submit a PR.
+We welcome contributions from developers, testers, and Linux enthusiasts. Steps:
+1. Fork this repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Submit a Pull Request.
+
+**Ideas for contributions:**
+- Add support for other package managers (e.g., zypper, dnf).
+- Improve mirror ranking algorithms.
+- Write tests for advanced features.
 
 ---
 
