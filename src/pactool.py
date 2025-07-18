@@ -39,6 +39,7 @@ from core.logger import logSuccess, logError
 from core.formatter import Formatter
 from core.manager import Manager
 from operations.packages import Packages
+from operations.services import Services
 from operations.mirrors import Mirrors
 
 
@@ -61,6 +62,7 @@ class Main:
         # ==> CREATE OBJECTS
         self.manager = Manager()
         self.packages = Packages(Pactool=self)
+        self.services = Services(Pactool=self)
         self.mirrors = Mirrors(Pactool=self)
 
 
@@ -147,7 +149,16 @@ class Main:
         pkg.add_argument("--rsort", metavar="CRITERIA", help=f"{sortChoices}")
         pkg.add_argument("--user", action="store_true", help="Show only user-installed packages")
         pkg.add_argument("--system", action="store_true", help="Show only system packages")
- 
+        
+        
+        ##########################################################################
+        #                                 Services                               #
+        ##########################################################################
+        services = parser.add_argument_group("Service Commands")
+        services.add_argument("--services", action="store_true", help="Show the status of system services related to installed packages")
+        services.add_argument("--service-info", metavar="SERVICE", help="Show detailed information about a service")
+        services.add_argument("--service-logs", metavar="SERVICE", help="Show the logs of a service")
+
         
         ##########################################################################
         #                                  Mirrors                               #
@@ -206,6 +217,17 @@ class Main:
                 self.packages.upgrade()
             elif args.clean:
                 self.packages.clean()
+                
+                
+                
+                
+            # ==> SERVICE COMMANDS
+            elif args.services:
+                self.services.showServices()
+            elif args.service_info:
+                self.services.info(args.service_info)
+            elif args.service_logs:
+                self.services.logs(args.service_logs)
 
             
             
