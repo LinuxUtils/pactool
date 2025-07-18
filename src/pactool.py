@@ -45,6 +45,125 @@ from operations.kernels import Kernels
 
 
 
+
+##########################################################################
+#                                                                        #
+#                                VERSION                                 #
+#                                                                        #
+##########################################################################
+class Version:
+    description = "A cross-distro package management helper for Linux systems."
+    release = "1.0.0"
+    releaseDate = "18/7/2025"
+
+
+
+
+
+
+
+
+##########################################################################
+#                                                                        #
+#                            ARGUMENT PARSER                             #
+#                                                                        #
+##########################################################################
+
+
+class PactoolArgumentParser(ArgumentParser):
+    def showLogo(self):
+        # ==> DEFINE START AND END COLORS
+        startColor = (255, 255, 0)
+        endColor = (255, 240, 125)
+
+
+        # ==> DEFINE LOGO
+        logoLines = [
+            "            ::::::::::::::::     ",
+            "         ::::::::::::::::::::::  ",
+            "       ::::::::::::::::::::::::::",
+            "      :::::::::::::::::::::::::  ",
+            "     :::::::::::::::::::::: P    ",
+            "    ::::::::::::::::::::: A      ",
+            "    ::::::::::::::::::: C        ",
+           f"    ::::::::::::::::       {Version.release}",
+            "    ::::::::::::::::::: T        ",
+            "    ::::::::::::::::::::: O      ",
+            "     :::::::::::::::::::::: L    ",
+            "      :::::::::::::::::::::::::  ",
+            "       ::::::::::::::::::::::::::",
+            "         ::::::::::::::::::::::  ",
+            "            ::::::::::::::::     "
+        ]
+
+
+
+        # ==> INTERPOLATE BETWEEN TWO COLORS
+        def interpolateColor(start, end, factor):
+            return tuple(
+                int(start[i] + (end[i] - start[i]) * factor) for i in range(3)
+            )
+
+
+
+        for i, line in enumerate(logoLines):
+            factor = i / (len(logoLines) - 1)
+            r, g, b = interpolateColor(startColor, endColor, factor)
+            colorCode = f"\033[38;2;{r};{g};{b}m"
+            print(f"{colorCode}{line}\033[0m")
+
+
+
+
+
+    def format_help(self):
+        self.showLogo()
+        helpText = (
+            f"{Formatter.bold}{Formatter.yellow}USAGE:{Formatter.reset}\n"
+            "  python3 pactool.py [OPTIONS]\n"
+            f"\n{Formatter.bold}{Formatter.yellow}GENERAL COMMANDS:{Formatter.reset}\n"
+            "  --version                   Show Pactool version and exit\n"
+            "  --ping                      Check if Pactool is working (returns Pong)\n"
+            "  --about                     Display detailed information about Pactool\n"
+            f"\n{Formatter.bold}{Formatter.yellow}PACKAGE COMMANDS:{Formatter.reset}\n"
+            "  --list                      List installed packages (paged by default)\n"
+            "  -n N                        Number of packages to show (0 = all)\n"
+            "  --stats                     Show statistics about packages\n"
+            "  --files PACKAGE             List all files installed by a package\n"
+            "  --search SEARCH             Search for a package by name\n"
+            "  --why PACKAGE               Show reverse dependencies of a package\n"
+            "  --uninstall PACKAGE         Uninstall a package by name\n"
+            "  --install PACKAGE           Install a package by name\n"
+            "  --update                    Update all installed packages\n"
+            "  --upgrade                   Upgrade all installed packages\n"
+            "  --clean                     Clean cached or unused package files\n"
+            "  --sort CRITERIA             name/size/install-date/update-date/type\n"
+            "  --rsort CRITERIA            Reverse sort by the same criteria\n"
+            "  --user                      Show only user-installed packages\n"
+            "  --system                    Show only system packages\n"
+            "  --info PACKAGE              Show detailed information about a package\n"
+            "  --bloat                     Find unused optional dependencies (bloat)\n"
+            "  --unused                    Find unused or orphaned packages\n"
+            "  --outdated                  List all outdated packages\n"
+            f"\n{Formatter.bold}{Formatter.yellow}SERVICE COMMANDS:{Formatter.reset}\n"
+            "  --services                  Show status of services related to packages\n"
+            "  --service-info SERVICE      Show detailed info about a service\n"
+            "  --service-logs SERVICE      Show logs of a service\n"
+            f"\n{Formatter.bold}{Formatter.yellow}MIRROR COMMANDS:{Formatter.reset}\n"
+            "  --show-mirrors              Show current mirrors with ping & last update\n"
+            "  --update-mirrors            Update to fastest mirrors\n"
+            "  --revert-mirrors            Revert mirrors to previous backup\n"
+            "  --backup-mirrors            Create a manual backup of the current mirror list\n"
+            f"\n{Formatter.bold}{Formatter.yellow}KERNEL COMMANDS:{Formatter.reset}\n"
+            "  --cleanup-kernels           Automatically remove old kernels\n"
+            "  --backup-kernel             Backup the current running kernel to /boot/pactool/backup\n"
+        )
+        
+        
+        return helpText
+
+
+
 ##########################################################################
 #                                                                        #
 #                                 MAIN                                   #
@@ -55,9 +174,9 @@ from operations.kernels import Kernels
 class Main:
     def __init__(self) -> None:
         # ==> GENERAL INFO
-        self.description = "A cross-distro package management helper for Linux systems."
-        self.release = "1.0.0"
-        self.releaseDate = "18/7/2025"
+        self.description = Version.description
+        self.release = Version.release
+        self.releaseDate = Version.releaseDate
 
 
         # ==> CREATE OBJECTS
@@ -108,90 +227,58 @@ class Main:
 
 
     def createParser(self) -> ArgumentParser:
-        parser = ArgumentParser(
-            prog="pactool.py",
-            description=(
-                "Pactool 1.0.0 - A cross-distro package management helper for Linux systems.\n\n"
-                "\nExamples:\n"
-                "  python3 pactool.py --list\n"
-                "  python3 pactool.py --search firefox\n"
-                "  python3 pactool.py --install vlc --user\n"
-            ),
-            formatter_class=RawTextHelpFormatter
-        )
-
+        parser = PactoolArgumentParser(formatter_class=RawTextHelpFormatter)
 
         ##########################################################################
         #                                GENERAL                                 #
         ##########################################################################
-        general = parser.add_argument_group("General Commands")
-        general.add_argument("--version", action="store_true", help="Show Pactool version and exit")
-        general.add_argument("--ping", action="store_true", help="Check if Pactool is working (returns Pong)")
-        general.add_argument("--about", action="store_true", help="Display detailed information about Pactool")
-
-
+        parser.add_argument("--version", action="store_true", help="Show Pactool version and exit")
+        parser.add_argument("--ping", action="store_true", help="Check if Pactool is working (returns Pong)")
+        parser.add_argument("--about", action="store_true", help="Display detailed information about Pactool")
 
         ##########################################################################
-        #                                 Packages                               #
+        #                                 PACKAGES                               #
         ##########################################################################
-        pkg = parser.add_argument_group("Package Commands")
-        pkg.add_argument("--list", action="store_true", help="List installed packages (paged by default)")
-        pkg.add_argument("-n", type=int, metavar="N", help="Number of packages to show (0 = all)")
-        pkg.add_argument("--stats", action="store_true", help="Show statistics about packages")
-        pkg.add_argument("--files", metavar="PACKAGE", help="List all files installed by a package")
-        pkg.add_argument("--search", metavar="SEARCH", help="Search for a package by name")
-        pkg.add_argument("--why", metavar="PACKAGE", help="Show which packages depend on this package (reverse dependencies)")
-        pkg.add_argument("--uninstall", metavar="PACKAGE", help="Uninstall a package by name")
-        pkg.add_argument("--install", metavar="PACKAGE", help="Install a package by name")
-        pkg.add_argument("--update", action="store_true", help="Update all installed packages")
-        pkg.add_argument("--upgrade", action="store_true", help="Upgrade all installed packages")
-        pkg.add_argument("--clean", action="store_true", help="Clean cached or unused package files")
-        sortChoices = "name/size/install-date/update-date/type"
-        pkg.add_argument("--sort", metavar="CRITERIA", help=f"{sortChoices}")
-        pkg.add_argument("--rsort", metavar="CRITERIA", help=f"{sortChoices}")
-        pkg.add_argument("--user", action="store_true", help="Show only user-installed packages")
-        pkg.add_argument("--system", action="store_true", help="Show only system packages")
-        pkg.add_argument("--info", metavar="PACKAGE", help="Show detailed information about a specific package")
-        pkg.add_argument("--bloat", action="store_true", help="Find unused optional dependencies (bloat)")
-        pkg.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
-        pkg.add_argument("--outdated", action="store_true", help="List all outdated packages (newer version available)")
+        parser.add_argument("--list", action="store_true", help="List installed packages (paged by default)")
+        parser.add_argument("-n", type=int, metavar="N", help="Number of packages to show (0 = all)")
+        parser.add_argument("--stats", action="store_true", help="Show statistics about packages")
+        parser.add_argument("--files", metavar="PACKAGE", help="List all files installed by a package")
+        parser.add_argument("--search", metavar="SEARCH", help="Search for a package by name")
+        parser.add_argument("--why", metavar="PACKAGE", help="Show reverse dependencies of a package")
+        parser.add_argument("--uninstall", metavar="PACKAGE", help="Uninstall a package by name")
+        parser.add_argument("--install", metavar="PACKAGE", help="Install a package by name")
+        parser.add_argument("--update", action="store_true", help="Update all installed packages")
+        parser.add_argument("--upgrade", action="store_true", help="Upgrade all installed packages")
+        parser.add_argument("--clean", action="store_true", help="Clean cached or unused package files")
+        parser.add_argument("--sort", metavar="CRITERIA", help="name/size/install-date/update-date/type")
+        parser.add_argument("--rsort", metavar="CRITERIA", help="Reverse sort by criteria")
+        parser.add_argument("--user", action="store_true", help="Show only user-installed packages")
+        parser.add_argument("--system", action="store_true", help="Show only system packages")
+        parser.add_argument("--info", metavar="PACKAGE", help="Show detailed information about a package")
+        parser.add_argument("--bloat", action="store_true", help="Find unused optional dependencies (bloat)")
+        parser.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
+        parser.add_argument("--outdated", action="store_true", help="List all outdated packages")
 
-                
-                
         ##########################################################################
-        #                                 Services                               #
+        #                                 SERVICES                               #
         ##########################################################################
-        services = parser.add_argument_group("Service Commands")
-        services.add_argument("--services", action="store_true", help="Show the status of system services related to installed packages")
-        services.add_argument("--service-info", metavar="SERVICE", help="Show detailed information about a service")
-        services.add_argument("--service-logs", metavar="SERVICE", help="Show the logs of a service")
+        parser.add_argument("--services", action="store_true", help="Show status of services related to packages")
+        parser.add_argument("--service-info", metavar="SERVICE", help="Show detailed info about a service")
+        parser.add_argument("--service-logs", metavar="SERVICE", help="Show logs of a service")
 
-        
         ##########################################################################
-        #                                  Mirrors                               #
+        #                                  MIRRORS                               #
         ##########################################################################
-        mirrors = parser.add_argument_group("Mirror Commands")
-        mirrors.add_argument("--show-mirrors", action="store_true", help="Show the current mirrors with ping and last update")
-        mirrors.add_argument("--update-mirrors", action="store_true", help="Update to the fastest mirrors")
-        mirrors.add_argument("--revert-mirrors", action="store_true", help="Revert mirrors to a previous backup")
-        mirrors.add_argument("--backup-mirrors", action="store_true", help="Create a manual backup of the current mirror list")
-        
-        
-        ##########################################################################
-        #                              Kernel Commands                           #
-        ##########################################################################
-        kernel = parser.add_argument_group("Kernel Commands")
-        kernel.add_argument(
-            "--cleanup-kernels",
-            action="store_true",
-            help="Automatically remove old kernels (safe cleanup)"
-        )
-        kernel.add_argument(
-            "--backup-kernel",
-            action="store_true",
-            help="Backup the current running kernel to /boot/pactool/backup"
-        )
+        parser.add_argument("--show-mirrors", action="store_true", help="Show current mirrors with ping & last update")
+        parser.add_argument("--update-mirrors", action="store_true", help="Update to fastest mirrors")
+        parser.add_argument("--revert-mirrors", action="store_true", help="Revert mirrors to previous backup")
+        parser.add_argument("--backup-mirrors", action="store_true", help="Create a manual backup of the current mirror list")
 
+        ##########################################################################
+        #                              KERNEL COMMANDS                           #
+        ##########################################################################
+        parser.add_argument("--cleanup-kernels", action="store_true", help="Automatically remove old kernels")
+        parser.add_argument("--backup-kernel", action="store_true", help="Backup the current running kernel to /boot/pactool/backup")
 
         return parser
 
