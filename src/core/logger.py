@@ -34,13 +34,18 @@ from pathlib import Path
 from logging import basicConfig, info, error, INFO
 
 
+
 # ==> CREATE LOG DIRECTORY
-logDir = Path.home() / ".cache" / "paktool" / "logs"
+logDir = Path.home() / ".cache" / "pactool" / "logs"
 logDir.mkdir(parents=True, exist_ok=True)
+
 
 
 # ==> LOG FILE NAME BASED ON TODAY'S DATE
 logFile = logDir / f"{datetime.now().strftime('%Y-%m-%d')}.log"
+
+
+
 
 
 # ==> CONFIGURE LOGGER
@@ -52,15 +57,22 @@ basicConfig(
 )
 
 
+
+
+
+
 def logSuccess(message: str):
     """
-    Logs a success message to today's PakTool log file.
+    Logs a success message to today's Pactool log file.
     """
     info(message)
 
 
+
+
+
 def logError(message: str):
     """
-    Logs an error message to today's PakTool log file.
+    Logs an error message to today's Pactool log file.
     """
     error(message)

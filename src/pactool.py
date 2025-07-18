@@ -21,67 +21,114 @@
 # SOFTWARE.
 
 
+
+
+
 ##########################################################################
 #                                                                        #
 #                                MODULES                                 #
 #                                                                        #
 ##########################################################################
 
+from argparse import ArgumentParser, Namespace
+from sys import exit as sysExit
 
-from argparse import ArgumentParser
-from sys import exit
-from paktool.logger import logSuccess, logError
+
+# ==> PACTOOL FILES
+from core.logger import logSuccess, logError
 
 
 
 
 ##########################################################################
 #                                                                        #
-#                               FUNCTIONS                                #
+#                                 MAIN                                   #
 #                                                                        #
 ##########################################################################
-
-
-def handleBase():
-    """
-    Displays a base message for PakTool.
-    Currently a placeholder for future features.
-    """
-    message = "PakTool Base: No features implemented yet."
-    print(message)
-    logSuccess(message)
+class Formatter():
+    tab4 = " " * 4
+    tab8 = " " * 8
+    point = "•"
 
 
 
 
 
-def createParser():
-    """
-    Creates and returns the base argument parser for PakTool.
-    """
-    parser = ArgumentParser(description="PakTool - Package Management Helper (Base Version)")
-    parser.add_argument("--version", action="version", version="PakTool 0.1.0")
-    return parser
+class Pactool:
+    def __init__(self) -> None:
+        self.description = "A cross-distro package management helper for Linux systems."
+        self.release = "1.0.0"
+        self.releaseDate = "18/7/2025"
 
 
 
 
-def main():
-    """
-    Entry point of PakTool.
-    Parses arguments, logs startup, and calls the base handler.
-    """
-    parser = createParser()
+    def ping(self) -> None:
+        print(f"Pong (Pactool {self.release})")
 
-    try:
-        logSuccess("PakTool started.")
-        args = parser.parse_args()
-        handleBase()
-        logSuccess("PakTool finished successfully.")
 
-    except BaseException as error:
-        logError(f"Unhandled exception when logging to cache ({error})")
-        exit(1)
+
+
+    def baseMessage(self) -> None:
+        print(f"Pactool {self.release}")
+
+
+
+
+
+    def info(self) -> None:
+        print(f"Pactool {self.release}")
+        
+        # ==> AUTHOR INFO
+        print(f"{Formatter.tab4}Author:")
+        print(f"{Formatter.tab8}g7gg <www.github.com/g7gg>")
+        print()
+
+        # ==> RELEASE INFO
+        print(f"{Formatter.tab4}Version:")
+        print(f"{Formatter.tab8}Release {self.release}")
+        print(f"{Formatter.tab8}Released on {self.releaseDate}")
+
+
+
+
+
+    def quit(self, code: int = 0) -> None:
+        sysExit(code)
+
+
+
+
+
+    def createParser(self) -> ArgumentParser:
+        parser = ArgumentParser(description=f"Pactool {self.release} - {self.description}")
+        parser.add_argument("--version", action="version", version=f"Pactool {self.release}")
+        parser.add_argument("--ping", action="store_true", help="Checks if Pactool is working (returns Pong)")
+        parser.add_argument("--info", action="store_true", help="Displays information about Pactool")
+        return parser
+
+
+
+
+    def run(self) -> None:
+        parser = self.createParser()
+
+        try:
+            args: Namespace = parser.parse_args()
+
+            if args.ping:
+                self.ping()
+            elif args.info:
+                self.info()
+            else:
+                self.baseMessage()
+
+
+            self.quit(code=0)
+
+
+        except Exception as error:
+            self.quit(f"Unhandled exception in main execution ({error})", 1)
 
 
 
@@ -93,5 +140,6 @@ def main():
 ##########################################################################
 
 
+
 if __name__ == "__main__":
-    main()
+    Pactool().run()
