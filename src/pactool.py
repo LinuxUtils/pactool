@@ -37,7 +37,9 @@ from sys import exit as sysExit
 # ==> PACTOOL FILES
 from core.logger import logSuccess, logError
 from core.formatter import Formatter
+from core.manager import Manager
 from operations.packages import Packages
+from operations.mirrors import Mirrors
 
 
 
@@ -48,7 +50,7 @@ from operations.packages import Packages
 ##########################################################################
 
 
-class Pactool:
+class Main:
     def __init__(self) -> None:
         # ==> GENERAL INFO
         self.description = "A cross-distro package management helper for Linux systems."
@@ -57,7 +59,9 @@ class Pactool:
 
 
         # ==> CREATE OBJECTS
-        self.packages = Packages()
+        self.manager = Manager()
+        self.packages = Packages(Pactool=self)
+        self.mirrors = Mirrors(Pactool=self)
 
 
 
@@ -124,7 +128,7 @@ class Pactool:
 
 
         ##########################################################################
-        #                                self.packages.                               #
+        #                                 Packages                               #
         ##########################################################################
         pkg = parser.add_argument_group("Package Commands")
         pkg.add_argument("--list", action="store_true", help="List installed packages (paged by default)")
@@ -135,11 +139,22 @@ class Pactool:
         pkg.add_argument("--install", metavar="PACKAGE", help="Install a package by name")
         pkg.add_argument("--update", action="store_true", help="Update all installed packages")
         pkg.add_argument("--upgrade", action="store_true", help="Upgrade all installed packages")
-
-
         sortChoices = "name/size/install-date/update-date/type"
         pkg.add_argument("--sort", metavar="CRITERIA", help=f"{sortChoices}")
         pkg.add_argument("--rsort", metavar="CRITERIA", help=f"{sortChoices}")
+        pkg.add_argument("--user", action="store_true", help="Show only user-installed packages")
+        pkg.add_argument("--system", action="store_true", help="Show only system packages")
+ 
+        
+        ##########################################################################
+        #                                  Mirrors                               #
+        ##########################################################################
+        mirrors = parser.add_argument_group("Mirror Commands")
+        mirrors.add_argument("--show-mirrors", action="store_true", help="Show the current mirrors with ping and last update")
+        mirrors.add_argument("--update-mirrors", action="store_true", help="Update to the fastest mirrors")
+        mirrors.add_argument("--revert-mirrors", action="store_true", help="Revert mirrors to a previous backup")
+        
+
         return parser
 
 
@@ -181,8 +196,20 @@ class Pactool:
                 self.packages.update()
             elif args.upgrade:
                 self.packages.upgrade()
+            
+            
+            # ==> MIRROR COMMANDS
+            elif args.show_mirrors:
+                self.mirrors.showMirrors()
+            elif args.update_mirrors:
+                self.mirrors.updateFastestMirrors()
+            elif args.revert_mirrors:
+                self.mirrors.revertMirrors()
+
+
             else:
                 self.baseMessage()
+
 
             self.quit(code=0)
 
@@ -222,4 +249,4 @@ class Pactool:
 
 
 if __name__ == "__main__":
-    Pactool().run()
+    Main().run()

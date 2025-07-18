@@ -49,24 +49,8 @@ from core.formatter import Formatter
 ##########################################################################
 
 class Packages:
-    def __init__(self) -> None:
-        # ==> DETECT PACKAGE MANAGER ON INIT
-        self.manager = self.detectManager()
-
-
-
-
-
-
-    # ==> DETECT SYSTEM PACKAGE MANAGER
-    def detectManager(self) -> str:
-        if which("apt"):
-            return "apt"
-        elif which("pacman"):
-            return "pacman"
-        logError("No supported package manager found (apt/pacman).")
-        return ""
-
+    def __init__(self, Pactool=None) -> None:
+        self.pactool = Pactool
 
 
 
@@ -137,23 +121,28 @@ class Packages:
 
     def list(self, limit: int = None, sortBy: str = None, showUser: bool = False, showSystem: bool = False, reverseSort: bool = False) -> None:
         try:
-            packageList = self.collectAptPackages() if self.manager == "apt" else self.collectPacmanPackages()
+            packageList = self.collectAptPackages() if self.pactool.manager.defaultPackageManager == "apt" else self.collectPacmanPackages()
             if not packageList:
                 print(Formatter.colorText("No packages found.", Formatter.red, Formatter.bold))
                 return
 
+
             # ==> GET ALL USER PACKAGES ONCE
             userPkgs = self._getUserPackages()
+
 
             # ==> TAG EACH PACKAGE AS USER OR SYSTEM
             for pkg in packageList:
                 pkg["isUser"] = pkg["name"] in userPkgs
 
+
             # ==> FILTER IF USER OR SYSTEM FLAGS ARE SET
             packageList = self._filterPackages(packageList, showUser, showSystem)
 
+
             # ==> SORT
             packageList = self._sortPackages(packageList, sortBy, reverseSort)
+
 
             # ==> WIDTH CALCULATION
             nameWidth = max(len(pkg["name"]) for pkg in packageList)
@@ -164,10 +153,13 @@ class Packages:
                 max(len(pkg["updated"]) for pkg in packageList)
             )
 
+
             def renderChunk(chunk, startIndex=0):
                 self._printPackages(chunk, nameWidth, sizeValWidth, sizeUnitWidth, dateWidth, startIndex=startIndex)
 
+
             self._paginate(packageList, renderChunk, limit)
+
 
         except CalledProcessError as error:
             logError(f"Failed to list packages ({error})")
@@ -226,12 +218,15 @@ class Packages:
 
 
     def _getUserPackages(self):
-        if self.manager == "pacman":
+        if self.pactool.manager.defaultPackageManager == "pacman":
             result = run(["pacman", "-Qe"], capture_output=True, text=True)
             return {line.split()[0] for line in result.stdout.strip().splitlines() if line}
-        elif self.manager == "apt":
+        
+        
+        elif self.pactool.manager.defaultPackageManager == "apt":
             result = run(["apt-mark", "showmanual"], capture_output=True, text=True)
             return {line.strip() for line in result.stdout.strip().splitlines() if line}
+        
         
         return set()
 
@@ -320,9 +315,9 @@ class Packages:
     def search(self, name: str, limit: int = None) -> None:
         try:
             result = ""
-            if self.manager == "apt":
+            if self.pactool.manager.defaultPackageManager == "apt":
                 result = run(["apt", "search", name], capture_output=True, text=True, check=True).stdout
-            elif self.manager == "pacman":
+            elif self.pactool.manager.defaultPackageManager == "pacman":
                 result = run(["pacman", "-Ss", name], capture_output=True, text=True, check=True).stdout
             else:
                 print(Formatter.colorText("No package manager found.", Formatter.red))
@@ -451,7 +446,7 @@ class Packages:
     def stats(self, limit: int = None, headerText: str = "Package Statistics") -> None:
         try:
             # ==> COLLECT PACKAGE LIST FROM APT OR PACMAN
-            packageList = self.collectAptPackages() if self.manager == "apt" else self.collectPacmanPackages()
+            packageList = self.collectAptPackages() if self.pactool.manager.defaultPackageManager == "apt" else self.collectPacmanPackages()
             if not packageList:
                 print(Formatter.colorText("No packages found.", Formatter.red, Formatter.bold))
                 return
@@ -507,7 +502,7 @@ class Packages:
             systemCount = 0
 
 
-            if self.manager == "pacman":
+            if self.pactool.manager.defaultPackageManager == "pacman":
                 result = run(["pacman", "-Qe"], capture_output=True, text=True)
                 userPkgs = {line.split()[0] for line in result.stdout.strip().splitlines() if line}
                 for pkg in packageList:
@@ -517,7 +512,7 @@ class Packages:
                         systemCount += 1
 
 
-            elif self.manager == "apt":
+            elif self.pactool.manager.defaultPackageManager == "apt":
                 result = run(["apt-mark", "showmanual"], capture_output=True, text=True)
                 userPkgs = {line.strip() for line in result.stdout.strip().splitlines() if line}
                 for pkg in packageList:
@@ -664,7 +659,7 @@ class Packages:
             print(f"{Formatter.tab8}Latest updated   ->  "
                 f"{Formatter.colorText(latestUpdName, getPackageColor(latestUpdated), Formatter.bold)}  "
                 f"({Formatter.colorText(latestUpdated['updated'], Formatter.dateColor)})")
-
+            print()
 
 
 
@@ -682,10 +677,10 @@ class Packages:
     def uninstall(self, name: str) -> None:
         try:
             # ==> DETERMINE WHICH PACKAGE MANAGER TO USE
-            if self.manager == "apt":
+            if self.pactool.manager.defaultPackageManager == "apt":
                 command = ["sudo", "apt", "remove", name, "-y"]
                 print(Formatter.colorText(f"Using apt to uninstall '{name}'", Formatter.yellow, Formatter.bold))
-            elif self.manager == "pacman":
+            elif self.pactool.manager.defaultPackageManager == "pacman":
                 command = ["sudo", "pacman", "-R", name]
                 print(Formatter.colorText(f"Using pacman to uninstall '{name}'", Formatter.yellow, Formatter.bold))
             else:
@@ -701,6 +696,7 @@ class Packages:
 
             # ==> SUCCESS MESSAGE
             print(Formatter.colorText(f"Successfully uninstalled '{name}'", Formatter.green, Formatter.bold))
+            print()
             
             
             # ==> DISPLAY UPDATED STATS
@@ -721,10 +717,10 @@ class Packages:
     def install(self, name: str) -> None:
         try:
             # ==> DETERMINE WHICH PACKAGE MANAGER TO USE
-            if self.manager == "apt":
+            if self.pactool.manager.defaultPackageManager == "apt":
                 command = ["sudo", "apt", "install", name, "-y"]
                 print(Formatter.colorText(f"Using apt to install '{name}'", Formatter.yellow, Formatter.bold))
-            elif self.manager == "pacman":
+            elif self.pactool.manager.defaultPackageManager == "pacman":
                 command = ["sudo", "pacman", "-S", name]
                 print(Formatter.colorText(f"Using pacman to install '{name}'", Formatter.yellow, Formatter.bold))
             else:
@@ -762,10 +758,10 @@ class Packages:
     def update(self) -> None:
         try:
             # ==> DETERMINE WHICH PACKAGE MANAGER TO USE
-            if self.manager == "apt":
+            if self.pactool.manager.defaultPackageManager == "apt":
                 command = ["sudo", "apt", "update"]
                 print(Formatter.colorText("Using apt to update package lists", Formatter.yellow, Formatter.bold))
-            elif self.manager == "pacman":
+            elif self.pactool.manager.defaultPackageManager == "pacman":
                 command = ["sudo", "pacman", "-Sy"]
                 print(Formatter.colorText("Using pacman to update package lists", Formatter.yellow, Formatter.bold))
             else:
@@ -803,10 +799,10 @@ class Packages:
     def upgrade(self) -> None:
         try:
             # ==> DETERMINE WHICH PACKAGE MANAGER TO USE
-            if self.manager == "apt":
+            if self.pactool.manager.defaultPackageManager == "apt":
                 command = ["sudo", "apt", "upgrade", "-y"]
                 print(Formatter.colorText("Using apt to upgrade packages", Formatter.yellow, Formatter.bold))
-            elif self.manager == "pacman":
+            elif self.pactool.manager.defaultPackageManager == "pacman":
                 command = ["sudo", "pacman", "-Syu"]
                 print(Formatter.colorText("Using pacman to upgrade packages", Formatter.yellow, Formatter.bold))
             else:
@@ -912,6 +908,7 @@ class Packages:
 
 
 
+
     def parsePacmanBlock(self, block: str) -> dict:
         lines = block.split("\n")
         info = {}
@@ -932,6 +929,7 @@ class Packages:
             elif line.startswith("Install Date"):
                 dateStr = line.split(":", 1)[1].strip()
                 info["installed"] = info["updated"] = dateStr
+
 
                 # ==> CONVERT PARSED DATE TO TIMESTAMP (FALL BACK TO 0)
                 dt = self._parseDate(dateStr)
@@ -989,14 +987,14 @@ class Packages:
             self._cachedUserPkgs = set()
             
             
-            if self.manager == "pacman":
+            if self.pactool.manager.defaultPackageManager == "pacman":
                 result = run(["pacman", "-Qe"], capture_output=True, text=True)
                 self._cachedUserPkgs = {line.split()[0] for line in result.stdout.strip().splitlines() if line}
                 
                 
-            elif self.manager == "apt":
+            elif self.pactool.manager.defaultPackageManager == "apt":
                 result = run(["apt-mark", "showmanual"], capture_output=True, text=True)
                 self._cachedUserPkgs = {line.strip() for line in result.stdout.strip().splitlines() if line}
                 
+                
         return packageName.split()[0] in self._cachedUserPkgs
-
