@@ -32,6 +32,7 @@ from subprocess import run, CalledProcessError
 from shutil import which
 from datetime import datetime
 from os import stat
+from re import search
 
 
 # ==> PACTOOL FILES
@@ -133,32 +134,23 @@ class Packages:
 
 
 
-    def list(self, limit: int = None) -> None:
+    def list(self, limit: int = None, sortBy: str = None, showUser: bool = False, showSystem: bool = False, reverseSort: bool = False) -> None:
         try:
-            # ==> COLLECT PACKAGES FROM APT OR PACMAN
             packageList = self.collectAptPackages() if self.manager == "apt" else self.collectPacmanPackages()
             if not packageList:
                 print(Formatter.colorText("No packages found.", Formatter.red, Formatter.bold))
                 return
-            
-            
-            
-            # ==> MARK USER OR SYSTEM PACKAGES
-            userPkgs = set()
-            if self.manager == "pacman":
-                result = run(["pacman", "-Qe"], capture_output=True, text=True)
-                userPkgs = {line.split()[0] for line in result.stdout.strip().splitlines() if line}
-            
-            elif self.manager == "apt":
-                result = run(["apt-mark", "showmanual"], capture_output=True, text=True)
-                userPkgs = {line.strip() for line in result.stdout.strip().splitlines() if line}
 
 
-            for pkg in packageList:
-                pkg["isUser"] = pkg["name"] in userPkgs
+            # ==> FILTER USER/SYSTEM PACKAGES
+            packageList = self._filterPackages(packageList, showUser, showSystem)
 
 
-            # ==> CALCULATE COLUMN WIDTHS FOR FORMATTING
+            # ==> SORT PACKAGES BASED ON sortBy (reverse if needed)
+            packageList = self._sortPackages(packageList, sortBy, reverseSort)
+
+
+            # ==> WIDTH CALCULATION
             nameWidth = max(len(pkg["name"]) for pkg in packageList)
             sizeValWidth = max(len(pkg["sizeValue"]) for pkg in packageList) + 2
             sizeUnitWidth = max(len(pkg["sizeUnit"]) for pkg in packageList)
@@ -166,19 +158,122 @@ class Packages:
                 max(len(pkg["installed"]) for pkg in packageList),
                 max(len(pkg["updated"]) for pkg in packageList)
             )
+            
 
-
-            # ==> DEFINE CHUNK RENDER FUNCTION
             def renderChunk(chunk, startIndex=0):
                 self._printPackages(chunk, nameWidth, sizeValWidth, sizeUnitWidth, dateWidth, startIndex=startIndex)
 
 
-            # ==> USE PAGINATION LOGIC
             self._paginate(packageList, renderChunk, limit)
 
 
         except CalledProcessError as error:
             logError(f"Failed to list packages ({error})")
+
+
+    
+    
+    
+    
+    
+    
+    
+    def _sortPackages(self, pkgs, sortBy: str, reverseSort=False):
+        reverse = not reverseSort
+        key = None
+
+
+        if sortBy == "name":
+            key = lambda p: p["name"].lower()
+        elif sortBy == "size":
+            key = lambda p: float(p["sizeValue"])
+        elif sortBy == "install-date":
+            key = lambda p: p.get("installedTs", 0)
+        elif sortBy == "update-date":
+            key = lambda p: p.get("updatedTs", 0)
+
+
+        return sorted(pkgs, key=key, reverse=reverse) if key else pkgs
+
+
+
+
+
+
+
+
+    def _filterPackages(self, packageList, showUser: bool, showSystem: bool):
+        if not (showUser or showSystem):
+            return packageList
+
+
+        userPkgs = self._getUserPackages()
+        if showUser:
+            return [pkg for pkg in packageList if pkg["name"] in userPkgs]
+        elif showSystem:
+            return [pkg for pkg in packageList if pkg["name"] not in userPkgs]
+        return packageList
+
+
+
+
+
+
+
+    def _getUserPackages(self):
+        if self.manager == "pacman":
+            result = run(["pacman", "-Qe"], capture_output=True, text=True)
+            return {line.split()[0] for line in result.stdout.strip().splitlines() if line}
+        elif self.manager == "apt":
+            result = run(["apt-mark", "showmanual"], capture_output=True, text=True)
+            return {line.strip() for line in result.stdout.strip().splitlines() if line}
+        
+        return set()
+
+
+
+
+
+
+
+
+    
+    def _parseDate(self, dateStr: str) -> datetime:
+        """
+        Parse package date strings from both APT and pacman.
+        Normalize bare-hour timezones (e.g. "+03") to "+0300" so %z will accept them.
+        Falls back to datetime.min if parsing fails.
+        """
+        dateStr = dateStr.strip()
+
+
+        m = search(r' ([+-]\d{2})$', dateStr)
+        if m:
+            tz = m.group(1)
+            dateStr = dateStr[:-len(tz)] + tz + "00"
+
+
+        formats = [
+            "%a %d %b %Y %I:%M:%S %p %z",
+            "%a %d %b %Y %H:%M:%S %z",
+            "%a %d %b %Y %I:%M:%S %p",
+            "%Y-%m-%d %H:%M:%S",
+        ]
+
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(dateStr, fmt)
+            except ValueError:
+                continue
+
+
+        logError(f"Failed to parse date ({dateStr})")
+        return datetime.min
+
+
+
+
 
 
 
@@ -760,8 +855,8 @@ class Packages:
 
             # ==> GET INSTALL AND UPDATE DATES
             infoFile = f"/var/lib/dpkg/info/{packageName}.list"
-            installedTime = self.getFileDate(infoFile)
-            updatedTime = self.getFileDate(infoFile, updated=True)
+            installedTime, installedTs = self.getFileDate(infoFile, returnTimestamp=True)
+            updatedTime, updatedTs = self.getFileDate(infoFile, updated=True, returnTimestamp=True)
 
 
             # ==> APPEND PACKAGE DATA
@@ -770,7 +865,9 @@ class Packages:
                 "sizeValue": sizeVal,
                 "sizeUnit": sizeUnit,
                 "installed": installedTime,
-                "updated": updatedTime
+                "updated": updatedTime,
+                "installedTs": installedTs,
+                "updatedTs": updatedTs
             })
 
 
@@ -824,10 +921,16 @@ class Packages:
                 
             elif line.startswith("Install Date"):
                 dateStr = line.split(":", 1)[1].strip()
-                info["installed"] = dateStr
-                
-                # ==> PACMAN DOESN'T TRACK UPDATE DATES
-                info["updated"] = dateStr
+                info["installed"] = info["updated"] = dateStr
+
+                # ==> CONVERT PARSED DATE TO TIMESTAMP (FALL BACK TO 0)
+                dt = self._parseDate(dateStr)
+                try:
+                    ts = dt.timestamp()
+                except (OverflowError, ValueError, OSError):
+                    ts = 0
+
+                info["installedTs"] = info["updatedTs"] = ts
 
 
         return info if "name" in info else None
@@ -852,15 +955,17 @@ class Packages:
 
 
 
-    def getFileDate(self, path: str, updated: bool = False) -> str:
+    def getFileDate(self, path: str, *, updated=False, returnTimestamp=False):
         try:
-            fileStat = stat(path)
-            timestamp = fileStat.st_mtime if updated else fileStat.st_ctime
-            return datetime.fromtimestamp(timestamp).strftime("%a %d %b %Y %I:%M:%S %p %z")
+            st = stat(path)
+            ts = st.st_mtime if updated else st.st_ctime
+            nice = datetime.fromtimestamp(ts).strftime("%a %d %b %Y %I:%M:%S %p %z")
+            return (nice, ts) if returnTimestamp else nice
         except FileNotFoundError:
-            return "N/A"
-        
-        
+            return ("N/A", 0) if returnTimestamp else "N/A"
+
+
+
         
         
         

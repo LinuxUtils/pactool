@@ -130,6 +130,29 @@ class Pactool:
         packageGroup.add_argument("--install", type=str, help="Install a package by name")
         packageGroup.add_argument("--update", action="store_true", help="Updates all installed packages")
         packageGroup.add_argument("--upgrade", action="store_true", help="Upgrades all installed packages")
+        packageGroup.add_argument(
+            "--sort",
+            type=str,
+            choices=["name", "size", "install-date", "update-date"],
+            help="Sort packages by 'name', 'size', 'install-date', or 'update-date'"
+        )
+        packageGroup.add_argument(
+            "--rsort",
+            type=str,
+            choices=["name", "size", "install-date", "update-date"],
+            help="Reverse sort packages by 'name', 'size', 'install-date', or 'update-date'"
+        )
+        packageGroup.add_argument(
+            "--user",
+            action="store_true",
+            help="Show only user-installed packages"
+        )
+        packageGroup.add_argument(
+            "--system",
+            action="store_true",
+            help="Show only system packages"
+        )
+
 
 
         return parser
@@ -146,14 +169,21 @@ class Pactool:
         try:
             args: Namespace = parser.parse_args()
 
+            
+            # ==> GET SORTING OPTIONS (IF ANY)
+            sortOption = args.sort or args.rsort
+            reverseSort = bool(args.rsort)
+
+
             if args.ping:
                 self.ping()
             elif args.info:
                 self.info()
 
+
             # ==> PACKAGE COMMANDS
             elif args.list:
-                self.packages.list(args.n)
+                self.packages.list(args.n, sortOption, args.user, args.system, reverseSort)
             elif args.stats:
                 self.packages.stats(args.n)
             elif args.search:
@@ -177,7 +207,7 @@ class Pactool:
             
             # ==> IGNORE CLEAN EXITS
             if errorName == "SystemExit":
-                if getattr(error, "code", 1) == 0:
+                if getattr(error, "code", 1) in (0, 2):
                     self.quit(0)
                 else:
                     logError(f"\nUnhandled SystemExit in main execution ({error})")
