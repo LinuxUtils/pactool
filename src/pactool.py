@@ -155,6 +155,7 @@ class Main:
         mirrors.add_argument("--show-mirrors", action="store_true", help="Show the current mirrors with ping and last update")
         mirrors.add_argument("--update-mirrors", action="store_true", help="Update to the fastest mirrors")
         mirrors.add_argument("--revert-mirrors", action="store_true", help="Revert mirrors to a previous backup")
+        mirrors.add_argument("--backup-mirrors", action="store_true", help="Create a manual backup of the current mirror list")
         
 
         return parser
@@ -212,6 +213,8 @@ class Main:
                 self.mirrors.updateFastestMirrors()
             elif args.revert_mirrors:
                 self.mirrors.revertMirrors()
+            elif args.backup_mirrors:
+                self.mirrors.createManualBackup()
 
 
             else:

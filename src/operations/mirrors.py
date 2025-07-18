@@ -412,3 +412,24 @@ class Mirrors:
             
             
         return False
+    
+    
+    
+    
+    
+    
+    
+    
+    def createManualBackup(self) -> None:
+        try:
+            backupFile = self._backupMirrors()
+            
+            
+            if backupFile:
+                print(Formatter.colorText(f"Manual backup created: {backupFile}", Formatter.green))
+            else:
+                print(Formatter.colorText("Failed to create backup. No supported package manager found.", Formatter.red))
+        
+        
+        except Exception as error:
+            logError(f"Failed to create manual backup of mirrors ({error})")
