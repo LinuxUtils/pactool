@@ -19,3 +19,79 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+
+##########################################################################
+#                                                                        #
+#                                MODULES                                 #
+#                                                                        #
+##########################################################################
+
+
+from argparse import ArgumentParser
+from sys import exit
+from paktool.logger import logSuccess, logError
+
+
+
+
+##########################################################################
+#                                                                        #
+#                               FUNCTIONS                                #
+#                                                                        #
+##########################################################################
+
+
+def handleBase():
+    """
+    Displays a base message for PakTool.
+    Currently a placeholder for future features.
+    """
+    message = "PakTool Base: No features implemented yet."
+    print(message)
+    logSuccess(message)
+
+
+
+
+
+def createParser():
+    """
+    Creates and returns the base argument parser for PakTool.
+    """
+    parser = ArgumentParser(description="PakTool - Package Management Helper (Base Version)")
+    parser.add_argument("--version", action="version", version="PakTool 0.1.0")
+    return parser
+
+
+
+
+def main():
+    """
+    Entry point of PakTool.
+    Parses arguments, logs startup, and calls the base handler.
+    """
+    parser = createParser()
+
+    try:
+        logSuccess("PakTool started.")
+        args = parser.parse_args()
+        handleBase()
+        logSuccess("PakTool finished successfully.")
+
+    except BaseException as error:
+        logError(f"Unhandled exception when logging to cache ({error})")
+        exit(1)
+
+
+
+
+##########################################################################
+#                                                                        #
+#                                  MAIN                                  #
+#                                                                        #
+##########################################################################
+
+
+if __name__ == "__main__":
+    main()
