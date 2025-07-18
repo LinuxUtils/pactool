@@ -41,6 +41,7 @@ from core.manager import Manager
 from operations.packages import Packages
 from operations.services import Services
 from operations.mirrors import Mirrors
+from operations.kernels import Kernels
 
 
 
@@ -64,6 +65,7 @@ class Main:
         self.packages = Packages(Pactool=self)
         self.services = Services(Pactool=self)
         self.mirrors = Mirrors(Pactool=self)
+        self.kernels = Kernels(Pactool=self)
 
 
 
@@ -174,6 +176,22 @@ class Main:
         mirrors.add_argument("--revert-mirrors", action="store_true", help="Revert mirrors to a previous backup")
         mirrors.add_argument("--backup-mirrors", action="store_true", help="Create a manual backup of the current mirror list")
         
+        
+        ##########################################################################
+        #                              Kernel Commands                           #
+        ##########################################################################
+        kernel = parser.add_argument_group("Kernel Commands")
+        kernel.add_argument(
+            "--cleanup-kernels",
+            action="store_true",
+            help="Automatically remove old kernels (safe cleanup)"
+        )
+        kernel.add_argument(
+            "--backup-kernel",
+            action="store_true",
+            help="Backup the currently running kernel to /boot/backup/"
+        )
+
 
         return parser
 
@@ -252,6 +270,13 @@ class Main:
                 self.mirrors.revertMirrors()
             elif args.backup_mirrors:
                 self.mirrors.createManualBackup()
+                
+                
+            # ==> KERNEL COMMANDS
+            elif args.cleanup_kernels:
+                self.kernels.cleanupKernels()
+            elif args.backup_kernel:
+                self.kernels.backupKernel()
 
 
             else:

@@ -26,7 +26,7 @@
 ##########################################################################
 
 from os import makedirs, listdir
-from os.path import expanduser, join, isdir
+from os.path import expanduser, join, isdir, getctime
 from datetime import datetime
 from subprocess import run, PIPE
 from shutil import copy, which
@@ -34,8 +34,6 @@ from sys import stdout
 from time import sleep, perf_counter
 from urllib.request import urlopen
 from threading import Thread, Event
-from os.path import getctime
-from time import localtime, strftime
 
 # ==> PACTOOL FILES
 from core.logger import logError
@@ -426,7 +424,7 @@ class Mirrors:
             
             
             if backupFile:
-                print(Formatter.colorText(f"Manual backup created: {backupFile}", Formatter.green))
+                print(Formatter.colorText(f"Manual backup created -> {backupFile}", Formatter.green))
             else:
                 print(Formatter.colorText("Failed to create backup. No supported package manager found.", Formatter.red))
         
