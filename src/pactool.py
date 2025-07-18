@@ -125,7 +125,7 @@ class Main:
         general = parser.add_argument_group("General Commands")
         general.add_argument("--version", action="store_true", help="Show Pactool version and exit")
         general.add_argument("--ping", action="store_true", help="Check if Pactool is working (returns Pong)")
-        general.add_argument("--info", action="store_true", help="Display detailed information about Pactool")
+        general.add_argument("--about", action="store_true", help="Display detailed information about Pactool")
 
 
 
@@ -149,6 +149,7 @@ class Main:
         pkg.add_argument("--rsort", metavar="CRITERIA", help=f"{sortChoices}")
         pkg.add_argument("--user", action="store_true", help="Show only user-installed packages")
         pkg.add_argument("--system", action="store_true", help="Show only system packages")
+        pkg.add_argument("--info", metavar="PACKAGE", help="Show detailed information about a specific package")
         
         
         ##########################################################################
@@ -192,7 +193,7 @@ class Main:
 
             if args.ping:
                 self.ping()
-            elif args.info:
+            elif args.about:
                 self.info()
 
 
@@ -217,7 +218,8 @@ class Main:
                 self.packages.upgrade()
             elif args.clean:
                 self.packages.clean()
-                
+            elif args.info:
+                self.packages.info(args.info)   
                 
                 
                 

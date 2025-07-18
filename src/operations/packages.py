@@ -1217,3 +1217,84 @@ class Packages:
         # ==> SHOW THE NEW STATS
         print()
         self.stats()
+
+
+
+
+
+
+
+    def info(self, packageName: str) -> None:
+        try:
+            # ==> CHECK IF PACKAGE EXISTS
+            if not self._packageExists(packageName):
+                print(Formatter.colorText(f"Package '{packageName}' not found.", Formatter.red))
+                return
+
+
+            # ==> GET PACKAGE INFO BASED ON PACKAGE MANAGER
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                result = run(["pacman", "-Qi", packageName], capture_output=True, text=True, check=False).stdout
+                self._displayPackageInfoPacman(result)
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                result = run(["apt-cache", "show", packageName], capture_output=True, text=True, check=False).stdout
+                self._displayPackageInfoApt(result)
+            else:
+                print(Formatter.colorText("No supported package manager found.", Formatter.red))
+
+
+        except Exception as error:
+            logError(f"Failed to get package info ({error})")
+
+
+
+
+
+    def _displayPackageInfoPacman(self, info: str) -> None:
+        print(Formatter.colorText("\nPackage Information:\n", Formatter.headerColor, Formatter.bold))
+        
+        for line in info.splitlines():
+            # ==> SPLIT LINE INTO KEY AND VALUE
+            if line.startswith("Name") or line.startswith("Version") or line.startswith("Installed Size") or line.startswith("Install Date"):
+                key, value = line.split(":", 1)
+                print(f"{Formatter.colorText(key.strip() + ':', Formatter.cyan)} {Formatter.colorText(value.strip(), Formatter.white)}")
+
+            
+            # ==> SPECIAL HANDLING FOR DEPENDENCIES
+            elif line.startswith("Depends On"):
+                key, value = line.split(":", 1)
+                dependencies = value.strip().split()
+                print(f"{Formatter.colorText('Depends On:', Formatter.cyan)}")
+                
+                
+                # ==> PRINT EACH DEPENDENCY ON A NEW LINE IN TREE FORMAT
+                for dep in dependencies:
+                    print(f"  └─ {Formatter.colorText(dep, Formatter.green)}")
+
+
+
+
+
+
+
+    def _displayPackageInfoApt(self, info: str) -> None:
+        print(Formatter.colorText("\nPackage Information:\n", Formatter.headerColor, Formatter.bold))
+        
+        for line in info.splitlines():
+            # ==> SPLIT LINE INTO KEY AND VALUE
+            if line.startswith("Package") or line.startswith("Version") or line.startswith("Installed-Size") or line.startswith("Description"):
+                key, value = line.split(":", 1)
+                print(f"{Formatter.colorText(key.strip() + ':', Formatter.cyan)} {Formatter.colorText(value.strip(), Formatter.white)}")
+
+
+            # ==> SPECIAL HANDLING FOR DEPENDENCIES
+            elif line.startswith("Depends"):
+                key, value = line.split(":", 1)
+                dependencies = [dep.strip() for dep in value.split(',')]
+                print(f"{Formatter.colorText('Depends On:', Formatter.cyan)}")
+                
+                
+                # ==> PRINT EACH DEPENDENCY ON A NEW LINE IN TREE FORMAT
+                for dep in dependencies:
+                    print(f"  └─ {Formatter.colorText(dep, Formatter.green)}")
+
