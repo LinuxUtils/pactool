@@ -144,6 +144,7 @@ class PactoolArgumentParser(ArgumentParser):
             "  --bloat                     Find unused optional dependencies (bloat)\n"
             "  --unused                    Find unused or orphaned packages\n"
             "  --outdated                  List all outdated packages\n"
+            "  --history PACKAGE           Show version history and updates of a package\n"
             f"\n{Formatter.bold}{Formatter.yellow}SERVICE COMMANDS:{Formatter.reset}\n"
             "  --services                  Show status of services related to packages\n"
             "  --service-info SERVICE      Show detailed info about a service\n"
@@ -299,6 +300,7 @@ class Main:
         parser.add_argument("--bloat", action="store_true", help="Find unused optional dependencies (bloat)")
         parser.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
         parser.add_argument("--outdated", action="store_true", help="List all outdated packages")
+        parser.add_argument("--history", metavar="PACKAGE", help="Show version history and updates of a package")
 
 
         ##########################################################################
@@ -403,6 +405,9 @@ class Main:
                 self.packages.unused(args.n)
             elif args.outdated:
                 self.packages.outdated(args.n)
+            elif args.history:
+                self.packages.history(args.history)
+
 
  
                 

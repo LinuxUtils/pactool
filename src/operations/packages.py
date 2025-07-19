@@ -1691,3 +1691,254 @@ class Packages:
 
         except Exception as error:
             logError(f"Failed to list outdated packages ({error})")
+
+
+
+
+
+
+
+    def history(self, packageName: str) -> None:
+        try:
+            # ==> CHECK IF PACKAGE EXISTS
+            if not self._packageExists(packageName):
+                print(Formatter.colorText(f"Package '{packageName}' not found.", Formatter.red))
+                return
+
+
+            # ==> DETERMINE PACKAGE COLOR
+            pkgColor = Formatter.packageColor if self._isUserPackage(packageName) else Formatter.systemPackageColor
+
+
+            # ==> PRINT HEADER
+            print(Formatter.colorText(f"\nPackage Version History for '{packageName}':\n", Formatter.headerColor, Formatter.bold))
+
+
+            # ==> LIST TO STORE EVENTS
+            events = []
+            commandUsed = None
+
+
+            ################################################################################
+            # ==> PACMAN                                                                   #
+            ################################################################################
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                logData = run(["grep", packageName, "/var/log/pacman.log"], capture_output=True, text=True).stdout.splitlines()
+                if not logData:
+                    print(Formatter.colorText("No version history found.", Formatter.yellow))
+                    return
+
+
+                for line in logData:
+                    if "[PACMAN]" in line and packageName in line:
+                        commandUsed = line.split("]")[-1].strip().replace("Running '", "").replace("'", "")
+                    
+                    
+                    elif "[ALPM]" in line and ("installed" in line or "upgraded" in line):
+                        timestamp = line.split()[0].strip("[]")
+
+                        # ==> DETERMINE ACTION AND VERSION INFO
+                        if "upgraded" in line:
+                            oldVer = line.split("from")[-1].split()[0].strip("()")
+                            newVer = line.split("to")[-1].split()[0].strip("()")
+                            version = f"{oldVer} -> {newVer}"
+                            action = " Upgraded"
+                        else:
+                            version = line.split(packageName)[-1].strip().strip("()")
+                            action = "Installed"
+
+                        timeStr = Formatter.formatHistoryTime(timestamp)
+                        events.append((action, version, timeStr))
+
+
+
+            ################################################################################
+            # ==> APT                                                                      #
+            ################################################################################
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                logData = run(["grep", "-i", packageName, "/var/log/apt/history.log"], capture_output=True, text=True).stdout.splitlines()
+                if not logData:
+                    print(Formatter.colorText("No version history found.", Formatter.yellow))
+                    return
+
+
+                for line in logData:
+                    if "Commandline:" in line:
+                        commandUsed = line.split("Commandline:")[-1].strip()
+                    
+                    
+                    elif "Install" in line or "Upgrade" in line:
+                        action = "Installed" if "Install" in line else " Upgraded"
+                        version = line.split()[-1]
+                        dateStr = self._extractAptDate()
+                        timeStr = Formatter.formatHistoryTime(dateStr)
+                        events.append((action, version, timeStr))
+
+
+
+            ################################################################################
+            # ==> PRINT COLLECTED EVENTS WITH ALIGNMENT                                    #
+            ################################################################################
+            if not events:
+                print(Formatter.colorText("No install or upgrade events found.", Formatter.yellow))
+                return
+
+
+            # ==> CALCULATE MAX WIDTH FOR ALIGNMENT
+            maxWidth = max(len(f"{a} {packageName} ({v})") for a, v, _ in events)
+
+
+            # ==> PRINT EVENTS WITH EVEN SPACING
+            for action, version, timeStr in events:
+                baseStr = f"{action} {packageName} ({version})"
+                padding = " " * (maxWidth - len(baseStr))
+                
+                print(f"{Formatter.tab4}{Formatter.colorText(action, Formatter.white, Formatter.bold)} "
+                    f"{Formatter.colorText(packageName, pkgColor)} "
+                    f"({Formatter.colorText(version, Formatter.cyan)}){padding} "
+                    f"on {Formatter.colorText(timeStr, Formatter.dateColor)}")
+
+
+
+            ################################################################################
+            # ==> PRINT COMMAND USED                                                       #
+            ################################################################################
+            if commandUsed:
+                print(f"\n{Formatter.tab4}{Formatter.colorText('Command used:', Formatter.brightWhite, Formatter.bold)}")
+                highlightedCommand = self._highlightCommandPackage(commandUsed, packageName, pkgColor)
+                print(f"{Formatter.tab8}{highlightedCommand}")
+
+
+
+            ################################################################################
+            # ==> SHOW VERSION TREE                                                        #
+            ################################################################################
+            print()
+            self._showVersionTree(packageName)
+
+
+
+        except Exception as error:
+            logError(f"Failed to get package history for '{packageName}' ({error})")
+
+
+
+
+
+
+
+
+    def _showVersionTree(self, packageName: str) -> None:
+        # ==> PRINT HEADER
+        print(Formatter.colorText("\n    Version Tree:", Formatter.headerColor, Formatter.bold))
+        versions = []
+
+
+
+        ################################################################################
+        # ==> PACMAN IMPLEMENTATION                                                    #
+        ################################################################################
+        if self.pactool.manager.defaultPackageManager == "pacman":
+            currentVer = run(["pacman", "-Q", packageName], capture_output=True, text=True).stdout.split()[1]
+            logData = run(["grep", packageName, "/var/log/pacman.log"], capture_output=True, text=True).stdout.splitlines()
+
+
+
+            # ==> COLLECT VERSIONS
+            for line in logData:
+                if "[ALPM]" in line:
+                    if "upgraded" in line:
+                        parts = line.split()
+                        oldVer = parts[-3].strip("()")
+                        newVer = parts[-1].strip("()")
+                        versions.append((oldVer, newVer))
+                        
+                        
+                    elif "installed" in line:
+                        ver = line.split(packageName)[-1].strip().strip("()")
+                        versions.append((ver, None))
+
+
+
+            versions = list(dict.fromkeys(versions))
+
+
+            # ==> FIND MAX LENGTHS FOR LEFT AND RIGHT VERSIONS
+            leftMax = max(len(v[0]) for v in versions)
+            rightMax = max(len(v[1]) if v[1] else 0 for v in versions)
+
+
+
+            # ==> PRINT TREE WITH ALIGNMENT
+            for i, (oldVer, newVer) in enumerate(versions):
+                prefix = "└─ " if i == len(versions) - 1 else "├─ "
+                
+                if newVer:
+                    left = oldVer.ljust(leftMax)
+                    right = newVer.ljust(rightMax)
+                    combined = f"{left} -> {right}"
+                    isCurrent = (newVer == currentVer)
+                else:
+                    combined = oldVer.ljust(leftMax)
+                    isCurrent = (oldVer == currentVer)
+
+
+
+                suffix = " " + Formatter.colorText("(current)", Formatter.brightWhite, Formatter.bold) if isCurrent else ""
+                color = Formatter.green if isCurrent else Formatter.cyan
+
+
+                print(f"{Formatter.tab8}{prefix}{Formatter.colorText(combined, color)}{suffix}")
+
+
+
+
+
+
+        ################################################################################
+        # ==> APT IMPLEMENTATION                                                       #
+        ################################################################################
+        elif self.pactool.manager.defaultPackageManager == "apt":
+            currentVer = run(
+                ["dpkg-query", "-W", "-f=${Version}", packageName],
+                capture_output=True, text=True
+            ).stdout.strip()
+            result = run(["apt-cache", "madison", packageName], capture_output=True, text=True).stdout.splitlines()
+
+
+
+            for line in result:
+                parts = line.split("|")
+                if len(parts) >= 2:
+                    versions.append((parts[1].strip(), None))
+
+
+
+            leftMax = max(len(v[0]) for v in versions)
+
+
+
+            for i, (ver, _) in enumerate(versions):
+                prefix = "└─ " if i == len(versions) - 1 else "├─ "
+                isCurrent = (ver == currentVer)
+                suffix = " " + Formatter.colorText("(current)", Formatter.brightWhite, Formatter.bold) if isCurrent else ""
+                color = Formatter.green if isCurrent else Formatter.cyan
+                print(f"{Formatter.tab8}{prefix}{Formatter.colorText(ver.ljust(leftMax), color)}{suffix}")
+
+
+
+
+
+
+
+
+
+
+    def _highlightCommandPackage(self, command: str, packageName: str, pkgColor: str) -> str:
+        # ==> HIGHLIGHTS ONLY THE PACKAGE NAME WITHIN THE COMMAND STRING
+        parts = command.split()
+        highlightedParts = [
+            Formatter.colorText(p, pkgColor) if p == packageName else p
+            for p in parts
+        ]
+        return " ".join(highlightedParts)

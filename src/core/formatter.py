@@ -21,6 +21,13 @@
 # SOFTWARE.
 
 
+##########################################################################
+#                                                                        #
+#                                MODULES                                 #
+#                                                                        #
+##########################################################################
+from datetime import datetime
+
 
 
 ##########################################################################
@@ -121,3 +128,34 @@ class Formatter:
         # ==> DISPLAY LEGEND
         print(f"{userSquare} User package")
         print(f"{systemSquare} System package")
+
+
+
+
+
+    
+    @classmethod
+    def formatHistoryTime(cls, timestamp: str) -> str:
+        """
+        Parse timestamps from pacman and apt logs into a human-readable format.
+        Supports multiple common formats.
+        """
+        timeFormats = [
+            "%Y-%m-%dT%H:%M:%S%z",
+            "%Y-%m-%d %H:%M:%S",
+            "%a %d %b %Y %H:%M:%S %z",
+            "%Y-%m-%d %H:%M:%S%z",
+            "%Y-%m-%dT%H:%M:%S",
+            "%d-%m-%Y %H:%M:%S",
+            "%m/%d/%Y %H:%M:%S"
+        ]
+        
+        for fmt in timeFormats:
+            try:
+                dt = datetime.strptime(timestamp, fmt)
+                return dt.strftime("%d %b %Y, %I:%M %p %Z")
+            except ValueError:
+                continue
+            
+            
+        return timestamp
