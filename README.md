@@ -1,5 +1,22 @@
 ![PACTOOL BANNER](https://github.com/LinuxUtils/paktool/blob/main/graphics/PACTOOL_BANNER.png?raw=true)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/LinuxUtils/pactool/blob/main/LICENSE)
+[![Latest Commit](https://img.shields.io/github/last-commit/LinuxUtils/pactool?color=blue&label=Last%20Commit)](https://github.com/LinuxUtils/pactool/commits/main)
+[![Release](https://img.shields.io/github/v/release/LinuxUtils/pactool?color=green&label=Latest%20Release)](https://github.com/LinuxUtils/pactool/releases)
+[![Issues](https://img.shields.io/github/issues/LinuxUtils/pactool?color=red&label=Open%20Issues)](https://github.com/LinuxUtils/pactool/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/LinuxUtils/pactool?label=Pull%20Requests)](https://github.com/LinuxUtils/pactool/pulls)
+[![Repo Size](https://img.shields.io/github/repo-size/LinuxUtils/pactool?label=Repo%20Size)](https://github.com/LinuxUtils/pactool)
+[![Code Size](https://img.shields.io/github/languages/code-size/LinuxUtils/pactool?label=Code%20Size)](https://github.com/LinuxUtils/pactool)
+[![Top Language](https://img.shields.io/github/languages/top/LinuxUtils/pactool?color=yellow)](https://github.com/LinuxUtils/pactool)
+[![Contributors](https://img.shields.io/github/contributors/LinuxUtils/pactool)](https://github.com/LinuxUtils/pactool/graphs/contributors)
+[![Forks](https://img.shields.io/github/forks/LinuxUtils/pactool?style=social)](https://github.com/LinuxUtils/pactool/network/members)
+[![Stars](https://img.shields.io/github/stars/LinuxUtils/pactool?style=social)](https://github.com/LinuxUtils/pactool/stargazers)
+[![Watchers](https://img.shields.io/github/watchers/LinuxUtils/pactool?style=social)](https://github.com/LinuxUtils/pactool/watchers)
+[![Downloads](https://img.shields.io/github/downloads/LinuxUtils/pactool/total?color=purple&label=Downloads)](https://github.com/LinuxUtils/pactool/releases)
+[![Python Version](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://www.python.org/)
+[![OS](https://img.shields.io/badge/Supported-Arch%20%7C%20Debian%20%7C%20Ubuntu-orange)](https://github.com/LinuxUtils/pactool)
+
+
 # What is Pactool?
 #### PacTool is a versatile, simple, and powerful package management helper designed for **Arch Linux** and **Debian-based distributions**. It provides a clear and modern overview of all installed packages, their sizes, and dependencies, and offers various tools to optimize and maintain your system efficiently.
 
