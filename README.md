@@ -374,7 +374,7 @@ Available Versions for 'python':
 
 ---
 
-### Power combos
+### Some really useful combinations
 | Goal | Command |
 |------|---------|
 | Audit all install events **and** fetch CVEs for each version | `pactool --history openssl && pactool --versions openssl --assess-risk` |
