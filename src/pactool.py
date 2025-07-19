@@ -53,8 +53,8 @@ from operations.security import Security
 ##########################################################################
 class Version:
     description = "A cross-distro package management helper for Linux systems."
-    release = "1.0.0"
-    releaseDate = "18/7/2025"
+    release = "1.0.2"
+    releaseDate = "19/7/2025"
 
 
 
