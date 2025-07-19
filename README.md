@@ -1,6 +1,6 @@
 ![PACTOOL BANNER](https://github.com/LinuxUtils/paktool/blob/main/graphics/PACTOOL_BANNER.png?raw=true)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/LinuxUtils/pactool/blob/main/LICENSE)
+[![License: Apache 2](https://img.shields.io/badge/License-APACHE2-blue.svg)](https://github.com/LinuxUtils/pactool/blob/main/LICENSE)
 [![Latest Commit](https://img.shields.io/github/last-commit/LinuxUtils/pactool?color=blue&label=Last%20Commit)](https://github.com/LinuxUtils/pactool/commits/main)
 [![Release](https://img.shields.io/github/v/release/LinuxUtils/pactool?color=green&label=Latest%20Release)](https://github.com/LinuxUtils/pactool/releases)
 [![Issues](https://img.shields.io/github/issues/LinuxUtils/pactool?color=red&label=Open%20Issues)](https://github.com/LinuxUtils/pactool/issues)
@@ -482,4 +482,4 @@ We welcome contributions from developers, testers, and Linux enthusiasts. Steps:
 ---
 
 ## **License**
-MIT License - see LICENSE file.
+Apache 2 License - see LICENSE file.
