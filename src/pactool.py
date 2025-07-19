@@ -219,16 +219,40 @@ class Main:
 
 
 
-    def info(self) -> None:
+    def about(self) -> None:
+        # ==> HEADER
         print(f"{Formatter.headerColor}Pactool {self.release} {Formatter.reset}")
         
+        # ==> SHORT DESCRIPTION
+        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}What is Pactool?{Formatter.reset}")
+        print(f"{Formatter.tab8}Pactool is a powerful, cross-distro package management helper for")
+        print(f"{Formatter.tab8}Arch Linux, Manjaro, Debian, Ubuntu, and derivatives. It simplifies")
+        print(f"{Formatter.tab8}package management by providing clear, color-coded, and modern output.")
+        print()
+
+        # ==> KEY FEATURES
+        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}Key Features:{Formatter.reset}")
+        print(f"{Formatter.tab8}- Advanced package listing with pagination and sorting.")
+        print(f"{Formatter.tab8}- Search, install, uninstall, update, and upgrade packages.")
+        print(f"{Formatter.tab8}- Mirror management: show, update, backup, and revert mirrors.")
+        print(f"{Formatter.tab8}- Kernel utilities: cleanup old kernels and backup current kernel.")
+        print(f"{Formatter.tab8}- Vulnerability checks (CVEs) and security package overview.")
+        print()
+
+        # ==> BASIC USAGE
+        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}Basic Usage:{Formatter.reset}")
+        print(f"{Formatter.tab8}python3 pactool.py --list")
+        print(f"{Formatter.tab8}python3 pactool.py --search firefox")
+        print(f"{Formatter.tab8}python3 pactool.py --upgrade")
+        print()
+
         # ==> AUTHOR INFO
-        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}Author:")
+        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}Author:{Formatter.reset}")
         print(f"{Formatter.tab8}g7gg <www.github.com/g7gg>")
         print()
 
         # ==> RELEASE INFO
-        print(f"{Formatter.tab4}Version:")
+        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}Version:{Formatter.reset}")
         print(f"{Formatter.tab8}Release {self.release}")
         print(f"{Formatter.tab8}Released on {self.releaseDate}{Formatter.reset}")
 
@@ -347,7 +371,7 @@ class Main:
 
 
             if args.about:
-                self.info()
+                self.about()
 
 
             # ==> PACKAGE COMMANDS
