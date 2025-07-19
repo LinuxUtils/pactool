@@ -104,12 +104,160 @@ class Packages:
 
 
             if index < len(items):
+                print(f"{Formatter.headerColor}\nPress enter to continue | 'Q' to quit\n")
                 userInput = input(
-                    Formatter.colorText("\nPress Enter to view more (or 'q' to quit): ", Formatter.cyan)
-                ).strip().lower()
+                    Formatter.colorText(
+                        "--> ",
+                        Formatter.headerColor
+                    )
+                ).strip()
                 if userInput == "q":
                     break
                 print()
+                
+                
+                
+                
+                
+                
+    
+    
+    
+    def _paginateSearch(self, packages, keyword, renderFunc, limit: int = None):
+        # ==> APPLY LIMIT IF PROVIDED
+        if limit is not None:
+            if limit > 0:
+                packages = packages[:limit]
+                
+                
+            elif limit == 0:
+                # ==> SHOW HEADER AND DISPLAY ALL RESULTS WITHOUT PAGINATION
+                print(f'{Formatter.headerColor}Showing results for "{keyword}"{Formatter.reset}\n')
+                Formatter.displayPackageLegend()
+                print()
+                renderFunc(packages, keyword, startIndex=0)
+                
+                
+                # ==> ASK USER FOR A NEW KEYWORD EVEN IF RESULTS FIT ON ONE PAGE
+                print(f"{Formatter.headerColor}\nPress enter to continue | 'Q' to quit | or type a new keyword\n")
+                userInput = input(
+                    Formatter.colorText(
+                        "--> ",
+                        Formatter.headerColor
+                    )
+                ).strip().lower()
+                
+                
+                return userInput if userInput and userInput != "q" else None
+
+
+        # ==> CALCULATE TERMINAL HEIGHT (NUMBER OF LINES THAT FIT)
+        terminalHeight = get_terminal_size().lines - 10
+
+
+        # ==> TOTAL PACKAGES AND PAGE CALCULATION
+        totalPackages = len(packages)
+        pageSize = 0
+        index = 0
+        pageNumber = 1
+
+
+        # ==> CALCULATE TOTAL PAGES (APPROX) BY SIMULATING A SINGLE PAGE
+        tempIndex = 0
+        tempLines = 0
+        
+        
+        while tempIndex < totalPackages:
+            pkg = packages[tempIndex]
+            pkgLines = 1
+            if isinstance(pkg, tuple) and pkg[1]:
+                pkgLines += 2
+            if tempLines + pkgLines > terminalHeight:
+                break
+            
+            
+            tempLines += pkgLines
+            tempIndex += 1
+            
+        
+        pageSize = max(1, tempIndex)
+        totalPages = (totalPackages + pageSize - 1) // pageSize
+
+
+
+        # ==> PAGINATION LOOP
+        while index < totalPackages:
+            endIndex = index
+            lineCount = 0
+
+
+            # ==> DETERMINE HOW MANY PACKAGES FIT IN THIS PAGE
+            while endIndex < totalPackages:
+                pkg = packages[endIndex]
+                pkgLines = 1
+                
+                
+                if isinstance(pkg, tuple) and pkg[1]:
+                    pkgLines += 2
+                if lineCount + pkgLines > terminalHeight:
+                    break
+                
+                
+                lineCount += pkgLines
+                endIndex += 1
+
+
+
+            # ==> DISPLAY PAGE HEADER
+            print(f'\n{Formatter.headerColor}Showing results for "{keyword}" - Page {pageNumber} of {totalPages}{Formatter.reset}\n')
+            Formatter.displayPackageLegend()
+            print()
+
+
+
+            # ==> RENDER CURRENT PAGE
+            renderFunc(packages[index:endIndex], keyword, startIndex=index)
+
+
+
+            # ==> UPDATE INDEX AND PAGE NUMBER
+            index = endIndex
+            pageNumber += 1
+
+
+
+            # ==> ASK USER FOR INPUT IF THERE ARE MORE PAGES
+            if index < totalPackages:
+                print(f"{Formatter.headerColor}\nPress enter to continue | 'Q' to quit | or type a new keyword\n")
+                userInput = input(
+                    Formatter.colorText(
+                        "--> ",
+                        Formatter.headerColor
+                    )
+                ).strip()
+
+
+
+                # ==> HANDLE USER INPUT
+                if userInput.lower() == "q":
+                    return None
+                elif userInput:
+                    return userInput
+                print()
+
+
+
+        # ==> ASK USER FOR A NEW KEYWORD EVEN IF RESULTS FIT ON ONE PAGE
+        print(f"{Formatter.headerColor}\nPress enter to continue | 'Q' to quit | or type a new keyword\n")
+        userInput = input(
+            Formatter.colorText(
+                "--> ",
+                Formatter.headerColor
+            )
+        ).strip().lower()
+        
+        
+        return userInput if userInput and userInput != "q" else None
 
 
 
@@ -158,6 +306,7 @@ class Packages:
 
 
             self._paginate(packageList, renderChunk, limit)
+
 
 
         except CalledProcessError as error:
@@ -313,44 +462,56 @@ class Packages:
 
     def search(self, name: str, limit: int = None) -> None:
         try:
-            result = ""
-            if self.pactool.manager.defaultPackageManager == "apt":
-                result = run(["apt", "search", name], capture_output=True, text=True, check=True).stdout
-            elif self.pactool.manager.defaultPackageManager == "pacman":
-                result = run(["pacman", "-Ss", name], capture_output=True, text=True, check=True).stdout
-            else:
-                print(Formatter.colorText("No package manager found.", Formatter.red))
-                return
+            while True:
+                result = ""
+                if self.pactool.manager.defaultPackageManager == "apt":
+                    result = run(["apt", "search", name], capture_output=True, text=True, check=True).stdout
+                elif self.pactool.manager.defaultPackageManager == "pacman":
+                    result = run(["pacman", "-Ss", name], capture_output=True, text=True, check=True).stdout
+                else:
+                    print(Formatter.colorText("No package manager found.", Formatter.red))
+                    return
 
 
 
-            # ==> PARSE RESULTS INTO (NAME, DESCRIPTION) PAIRS
-            lines = [line.rstrip() for line in result.splitlines() if line.strip()]
-            packages = []
-            i = 0
-            
-            
-            while i < len(lines):
-                nameLine = lines[i]
-                descLine = ""
-                if i + 1 < len(lines) and lines[i + 1].startswith(" "):
-                    descLine = lines[i + 1].strip()
+                # ==> PARSE RESULTS INTO (NAME, DESCRIPTION) PAIRS
+                lines = [line.rstrip() for line in result.splitlines() if line.strip()]
+                packages = []
+                i = 0
+                
+                
+                while i < len(lines):
+                    nameLine = lines[i]
+                    descLine = ""
+                    if i + 1 < len(lines) and lines[i + 1].startswith(" "):
+                        descLine = lines[i + 1].strip()
+                        i += 1
+                    packages.append((nameLine, descLine))
                     i += 1
-                packages.append((nameLine, descLine))
-                i += 1
 
 
 
-            # ==> APPLY LIMIT AFTER PAIRING
-            if limit is not None and limit > 0:
-                packages = packages[:limit]
-            elif limit == 0:
-                self._printSearchResults(packages, name, startIndex=0)
-                return
+                # ==> APPLY LIMIT AFTER PAIRING
+                if limit is not None and limit > 0:
+                    packages = packages[:limit]
+                elif limit == 0:
+                    self._printSearchResults(packages, name, startIndex=0)
+                    return
 
 
-            # ==> APPLY PAGINATION
-            self._paginate(packages, lambda chunk, startIndex=0: self._printSearchResults(chunk, name, startIndex), None)
+                # ==> APPLY PAGINATION
+                newKeyword = self._paginateSearch(
+                    packages,
+                    name,
+                    lambda chunk, keyword, startIndex=0: self._printSearchResults(chunk, keyword, startIndex),
+                    None
+                )
+
+                if newKeyword:
+                    name = newKeyword
+                    continue
+                else:
+                    break
 
 
         except CalledProcessError as error:
