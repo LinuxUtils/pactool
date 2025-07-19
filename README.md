@@ -367,7 +367,7 @@ Available Versions for 'python':
 |-----------|----------------|----------------|
 | 0 | **LOW RISK** 🟢 | Safe to use / keep. |
 | 1 – 5 | **MEDIUM RISK** 🟡 | Read CVE details; upgrade soon. |
-| > 5 | **HIGH RISK** 🔴 | Patch or pin a safer version ASAP. |
+| > 5 | **HIGH RISK** 🔴 | Patch or pin a safer version ASAP (or get exploited, idc either way). |
 
 > NVD API is rate‑limited (5 req / 30 s). PacTool caches results per session to avoid throttling.
 
