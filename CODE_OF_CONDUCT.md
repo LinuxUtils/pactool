@@ -32,7 +32,7 @@ We pledge to make participation in our community a harassment-free experience fo
 ## Reporting Violations
 If you witness or are subject to behavior that violates this Code of Conduct, please contact the LinuxUtils team at:
 
-**Email:** linuxutils@protonmail.com  
+**Email:**  thelinuxutils@gmail.com
 **GitHub:** [https://github.com/LinuxUtils](https://github.com/LinuxUtils)
 
 We will review all reports and respond within a reasonable time frame, while keeping your identity confidential.
