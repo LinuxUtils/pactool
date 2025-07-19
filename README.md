@@ -207,26 +207,105 @@ python3 pactool.py --clean
 ```
 Cleans package cache and prompts before deleting.
 
+
+
+## **Security Management**
+
+PacTool offers built-in tools to manage and check for security vulnerabilities.
+
+### **View Security Packages**
+Check for installed security-related packages on Debian/Ubuntu or run a security audit on Arch Linux:
+```bash
+python3 pactool.py --view-security-packages
+```
+**Debian/Ubuntu Example Output:**
+```
+Security Packages Installed (Debian/Ubuntu):
+libssl1.1
+libgnutls30
+```
+**Arch Linux Example Output:**
+```
+grub        [High Risk]    Affected by multiple issues.
+libxml2     [High Risk]    Affected by denial of service.
+```
+Packages are **color-coded**:
+- **Blue**: System packages.
+- **Magenta**: User-installed packages.
+
+### **Upgrade Security Packages**
+On Debian/Ubuntu systems, upgrade only security-related packages:
+```bash
+python3 pactool.py --upgrade-security
+```
+This ensures only security-related updates are applied.
+
+### **Check Security Vulnerabilities**
+You can run a vulnerability check for any package using:
+```bash
+python3 pactool.py --vuln-check PACKAGE
+```
+Example:
+```
+python3 pactool.py --vuln-check openssl
+```
+This will list all known CVEs, paginate results, and allow keyword searching within CVEs.
+\
+\
+You can also perform a deep search on a package
+```
+python3 pactool.py --vuln-check feh --deep-search
+```
+
 ---
 
 ## **Command Overview**
 ```
---list              List installed packages
---stats             Show package statistics
---search NAME       Search for a package
---install PACKAGE   Install a package
---uninstall PACKAGE Uninstall a package
---update            Update all packages
---upgrade           Upgrade all packages
---files PACKAGE     List files installed by a package
---why PACKAGE       Show reverse dependencies
---clean             Clean package manager cache
---show-mirrors      Show current mirrors
---update-mirrors    Update to fastest mirrors
---backup-mirrors    Backup current mirror list
---revert-mirrors    Revert mirrors to a backup
---cleanup-kernels   Remove old kernels safely
---backup-kernel     Backup the current kernel
+GENERAL COMMANDS:
+  --version                   Show Pactool version and exit
+  --about                     Display detailed information about Pactool
+
+PACKAGE COMMANDS:
+  --list                      List installed packages (paged by default)
+  -n N                        Number of packages to show (0 = all)
+  --stats                     Show statistics about packages
+  --files PACKAGE             List all files installed by a package
+  --search SEARCH             Search for a package by name
+  --why PACKAGE               Show reverse dependencies of a package
+  --uninstall PACKAGE         Uninstall a package by name
+  --install PACKAGE           Install a package by name
+  --update                    Update all installed packages
+  --upgrade                   Upgrade all installed packages
+  --clean                     Clean cached or unused package files
+  --sort CRITERIA             name/size/install-date/update-date/type
+  --rsort CRITERIA            Reverse sort by the same criteria
+  --user                      Show only user-installed packages
+  --system                    Show only system packages
+  --info PACKAGE              Show detailed information about a package
+  --bloat                     Find unused optional dependencies (bloat)
+  --unused                    Find unused or orphaned packages
+  --outdated                  List all outdated packages
+
+SERVICE COMMANDS:
+  --services                  Show status of services related to packages
+  --service-info SERVICE      Show detailed info about a service
+  --service-logs SERVICE      Show logs of a service
+
+MIRROR COMMANDS:
+  --show-mirrors              Show current mirrors with ping & last update
+  --update-mirrors            Update to fastest mirrors
+  --revert-mirrors            Revert mirrors to previous backup
+  --backup-mirrors            Create a manual backup of the current mirror list
+
+KERNEL COMMANDS:
+  --cleanup-kernels           Automatically remove old kernels
+  --backup-kernel             Backup the current running kernel to /boot/pactool/backup
+
+SECURITY COMMANDS:
+  --upgrade-security          Upgrade only security-related packages (Debian/Ubuntu)
+  --vuln-check PACKAGE        Check known CVEs (vulnerabilities) for a package
+  --deep-search               Use with --vuln-check for detailed exploit tree and history
+  --view-security-packages    View all installed security packages with details
 ```
 
 ---
