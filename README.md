@@ -275,6 +275,112 @@ You can also perform a deep search on a package
 python3 pactool.py --vuln-check feh --deep-search
 ```
 
+
+## Deep‑Dive Commands: `--history` & `--versions`
+These two commands for very useful for tracking package vulnerabilities on your Linux system.  
+They are optional, safe‑to‑run, **read‑only** operations – nothing is modified on disk.
+
+---
+
+### `--history PACKAGE` — Time‑Travel Through Install & Upgrade Events
+| What it does | Why it matters |
+|--------------|----------------|
+| **Parses native logs** (`/var/log/pacman.log` on Arch/Manjaro, `apt` history on Debian/Ubuntu). | No additional services or daemons required.  |
+| **Groups each event** → _Installed / Upgraded_  | Instantly see when & why a package changed. |
+| **Extracts the exact command** that triggered the change. | Answers *“Which script or user action installed this?”* |
+| **Builds a tree** of version transitions  (`3.10.3‑1 → 3.11.0‑2`). | Visual diff of how you arrived at the current release. |
+| **Colour‑codes** user vs system packages. | Glance‑level ownership info. |
+| **Respects `Ctrl +C`** — quits instantly, no messy tracebacks. | Friendly CLI UX. |
+
+#### Example
+```bash
+pactool --history bash
+```
+```
+Package Version History for 'bash':
+
+    Installed bash (5.2.037‑1)              on 15 Feb 2025, 06:43 AM UTC
+     Upgraded bash (5.2.037‑1 → 5.2.037‑2)  on 14 Mar 2025, 10:49 AM UTC+03:00
+     Upgraded bash (5.2.037‑2 → 5.2.037‑3)  on 07 May 2025, 09:53 AM UTC+03:00
+     Upgraded bash (5.2.037‑3 → 5.2.037‑5)  on 10 May 2025, 02:33 AM UTC+03:00
+     Upgraded bash (5.2.037‑5 → 5.3.0‑1)    on 14 Jul 2025, 12:47 AM UTC+03:00
+
+    Command used:
+        pacman -Syu bash
+
+    Version Tree:
+        ├─ 5.2.037‑1
+        ├─ 5.2.037‑1 → 5.2.037‑2
+        ├─ 5.2.037‑2 → 5.2.037‑3
+        ├─ 5.2.037‑3 → 5.2.037‑5
+        └─ 5.2.037‑5 → 5.3.0‑1 (current)
+```
+**Tips**
+* Pipe to `less -R` to keep colours while scrolling.
+* Combine with `grep` to find a specific date:  
+  `pactool --history openssl | grep 2025‑04`
+
+---
+
+### `--versions PACKAGE` — Repo‑Wide Version Explorer
+<details>
+<summary><strong>Quick glance</strong></summary>
+
+| Mode | Purpose |
+|------|---------|
+| **Plain** (`--versions pkg`) | Fast list – shows every build string available in enabled repositories. |
+| **Risk mode** (`--versions pkg --assess-risk`) | Queries the **NVD API** live, counts CVEs per version, colour‑codes severity, shows a spinner while fetching. |
+
+</details>
+
+#### Why you’ll love it
+* **Upgrade forecasting** – see what you’ll get _before_ hitting `pacman -Syu`.
+* **Rollback clarity** – pick an earlier safe build if the latest has many CVEs.
+* **Security snapshot** – Low/Medium/High risk label + exact CVE count.
+
+#### Example – quick scan
+```bash
+pactool --versions python
+```
+```
+    ├─ 3.12.6‑2
+    ├─ 3.12.6‑3
+    └─ 3.13.0‑1  (current)
+```
+
+#### Example – full risk audit
+```bash
+pactool --versions python --assess-risk
+```
+```
+Assessing risk for 'python' [\]
+Available Versions for 'python':
+
+    ├─ 3.12.6‑2  [LOW RISK]     0 CVEs
+    ├─ 3.12.6‑3  [MEDIUM RISK]  4 CVEs
+    └─ 3.13.0‑1  [HIGH RISK]    7 CVEs  (current)
+```
+
+**How the risk score works**
+
+| CVE Count | Label & Colour | Typical action |
+|-----------|----------------|----------------|
+| 0 | **LOW RISK** 🟢 | Safe to use / keep. |
+| 1 – 5 | **MEDIUM RISK** 🟡 | Read CVE details; upgrade soon. |
+| > 5 | **HIGH RISK** 🔴 | Patch or pin a safer version ASAP. |
+
+> NVD API is rate‑limited (5 req / 30 s). PacTool caches results per session to avoid throttling.
+
+
+---
+
+### Power combos
+| Goal | Command |
+|------|---------|
+| Audit all install events **and** fetch CVEs for each version | `pactool --history openssl && pactool --versions openssl --assess-risk` |
+| Show only available versions newer than installed | `pactool --versions vim \| awk '$1 > "9.0.0"'` |
+| Continuous monitoring (cron) | `pactool --versions kernel --assess-risk >> /var/log/kernel-risk.log` |
+
 ---
 
 ## **Command Overview**
