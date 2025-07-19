@@ -15,6 +15,7 @@
 [![Downloads](https://img.shields.io/github/downloads/LinuxUtils/pactool/total?color=purple&label=Downloads)](https://github.com/LinuxUtils/pactool/releases)
 [![Python Version](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://www.python.org/)
 [![OS](https://img.shields.io/badge/Supported-Arch%20%7C%20Debian%20%7C%20Ubuntu-orange)](https://github.com/LinuxUtils/pactool)
+[![PyPI Version](https://img.shields.io/pypi/v/pactool-linuxutils?color=blue&label=PyPI%20Version)](https://pypi.org/project/pactool-linuxutils/)
 
 
 # What is Pactool?
