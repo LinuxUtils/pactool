@@ -1,6 +1,10 @@
 ![PACTOOL GUIDELINES BANNER](https://github.com/LinuxUtils/pactool/blob/main/graphics/PACTOOL_GUIDELINES_BANNER.png?raw=true)
 
-## Our Pledge
+# LinuxUtils Code of Conduct
+
+#### The purpose of this Code of Conduct is to ensure a safe and positive environment across all LinuxUtils projects.
+
+
 We, the maintainers and contributors of **LinuxUtils** and its projects (including **Pactool**), pledge to foster an open, welcoming, and collaborative environment.  
 Our goal is to create free and open-source Linux tools that benefit everyone, and we are committed to ensuring that all contributors and users feel respected and included.
 
@@ -32,7 +36,7 @@ We pledge to make participation in our community a harassment-free experience fo
 ## Reporting Violations
 If you witness or are subject to behavior that violates this Code of Conduct, please contact the LinuxUtils team at:
 
-**Email:**  thelinuxutils@gmail.com
+**Email:**  [thelinuxutils@gmail.com](mailto:thelinuxutils@gmail.com)\
 **GitHub:** [https://github.com/LinuxUtils](https://github.com/LinuxUtils)
 
 We will review all reports and respond within a reasonable time frame, while keeping your identity confidential.
@@ -46,3 +50,5 @@ This Code of Conduct applies across all **LinuxUtils** projects and communicatio
 
 ## Acknowledgment
 This Code of Conduct is inspired by the [Contributor Covenant](https://www.contributor-covenant.org) but customized for LinuxUtils and its projects.
+
+#### Thank you for helping us build a welcoming and inclusive Linux open-source community!
