@@ -1,4 +1,4 @@
-![PACTOOL GUIDELINES BANNER](https://github.com/LinuxUtils/pactool/blob/main/graphics/PACTOOL_GUIDELINES_BANNER.png?raw=true)
+![LINUX UTILS CODE OF CONDUCT BANNER](https://github.com/LinuxUtils/.github/blob/main/CODE_OF_CONDUCT.png?raw=true)
 
 # LinuxUtils Code of Conduct
 
