@@ -269,8 +269,10 @@ class Main:
 
 
 
+
     def createParser(self) -> ArgumentParser:
         parser = PactoolArgumentParser(formatter_class=RawTextHelpFormatter)
+
 
         ##########################################################################
         #                                GENERAL                                 #
