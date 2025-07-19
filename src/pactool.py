@@ -31,7 +31,7 @@
 ##########################################################################
 
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
-from sys import exit as sysExit
+from sys import exit as sysExit, argv as sysArgv
 
 
 # ==> PACTOOL FILES
@@ -123,7 +123,6 @@ class PactoolArgumentParser(ArgumentParser):
             "  python3 pactool.py [OPTIONS]\n"
             f"\n{Formatter.bold}{Formatter.yellow}GENERAL COMMANDS:{Formatter.reset}\n"
             "  --version                   Show Pactool version and exit\n"
-            "  --ping                      Check if Pactool is working (returns Pong)\n"
             "  --about                     Display detailed information about Pactool\n"
             f"\n{Formatter.bold}{Formatter.yellow}PACKAGE COMMANDS:{Formatter.reset}\n"
             "  --list                      List installed packages (paged by default)\n"
@@ -161,6 +160,24 @@ class PactoolArgumentParser(ArgumentParser):
         
         
         return helpText
+    
+    
+    
+    def error(self, message):
+        # ==> CUSTOM ERROR MESSAGE
+        self.print_help()
+        print(f"\n{Formatter.red}{message.capitalize()}{Formatter.reset}")
+        sysExit(2)
+        
+        
+        
+        
+    def parse_args(self, args=None, namespace=None):
+        # ==> SHOW HELP IF NO ARGS ARE PROVIDED
+        if len(sysArgv) == 1:
+            self.print_help()
+            sysExit(0)
+        return super().parse_args(args, namespace)
 
 
 
@@ -185,35 +202,29 @@ class Main:
         self.services = Services(Pactool=self)
         self.mirrors = Mirrors(Pactool=self)
         self.kernels = Kernels(Pactool=self)
-
-
-
-
-    def ping(self) -> None:
-        print(f"Pong (Pactool {self.release})")
-
-
+        
+        
 
 
     def baseMessage(self) -> None:
-        print(f"Pactool {self.release}")
+        print(f"{Formatter.headerColor}{self.release}{Formatter.reset}")
 
 
 
 
 
     def info(self) -> None:
-        print(f"Pactool {self.release}")
+        print(f"{Formatter.headerColor}Pactool {self.release} {Formatter.reset}")
         
         # ==> AUTHOR INFO
-        print(f"{Formatter.tab4}Author:")
+        print(f"{Formatter.tab4}{Formatter.bold}{Formatter.brightWhite}Author:")
         print(f"{Formatter.tab8}g7gg <www.github.com/g7gg>")
         print()
 
         # ==> RELEASE INFO
         print(f"{Formatter.tab4}Version:")
         print(f"{Formatter.tab8}Release {self.release}")
-        print(f"{Formatter.tab8}Released on {self.releaseDate}")
+        print(f"{Formatter.tab8}Released on {self.releaseDate}{Formatter.reset}")
 
 
 
@@ -233,7 +244,6 @@ class Main:
         #                                GENERAL                                 #
         ##########################################################################
         parser.add_argument("--version", action="store_true", help="Show Pactool version and exit")
-        parser.add_argument("--ping", action="store_true", help="Check if Pactool is working (returns Pong)")
         parser.add_argument("--about", action="store_true", help="Display detailed information about Pactool")
 
         ##########################################################################
@@ -300,9 +310,7 @@ class Main:
             reverseSort = bool(args.rsort)
 
 
-            if args.ping:
-                self.ping()
-            elif args.about:
+            if args.about:
                 self.info()
 
 
