@@ -145,6 +145,7 @@ class PactoolArgumentParser(ArgumentParser):
             "  --unused                    Find unused or orphaned packages\n"
             "  --outdated                  List all outdated packages\n"
             "  --history PACKAGE           Show version history and updates of a package\n"
+            "  --versions PACKAGE          Show all available versions of a package with risk levels\n"
             f"\n{Formatter.bold}{Formatter.yellow}SERVICE COMMANDS:{Formatter.reset}\n"
             "  --services                  Show status of services related to packages\n"
             "  --service-info SERVICE      Show detailed info about a service\n"
@@ -301,7 +302,9 @@ class Main:
         parser.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
         parser.add_argument("--outdated", action="store_true", help="List all outdated packages")
         parser.add_argument("--history", metavar="PACKAGE", help="Show version history and updates of a package")
-
+        parser.add_argument("--versions", metavar="PACKAGE", help="Show all available versions of a package with risk levels")
+        parser.add_argument("--assess-risk", action="store_true", help="Assess risk level for package versions (Only used with --versions)")
+        
 
         ##########################################################################
         #                                 SERVICES                               #
@@ -407,6 +410,8 @@ class Main:
                 self.packages.outdated(args.n)
             elif args.history:
                 self.packages.history(args.history)
+            elif args.versions:
+                self.packages.versions(args.versions, assessRisk=args.assess_risk)
 
 
  
@@ -453,6 +458,8 @@ class Main:
 
 
             self.quit(code=0)
+
+
 
 
         except BaseException as error:

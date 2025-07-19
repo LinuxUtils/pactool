@@ -33,11 +33,13 @@ from shutil import copy, which
 from sys import stdout
 from time import sleep, perf_counter
 from urllib.request import urlopen
-from threading import Thread, Event
+from threading import Event
+
 
 # ==> PACTOOL FILES
 from core.logger import logError
 from core.formatter import Formatter
+from core.thread import SafeThread
 
 
 ##########################################################################
@@ -123,14 +125,14 @@ class Mirrors:
         def animate():
             i = 0
             while not stopEvent.is_set():
-                stdout.write(f"\r{Formatter.tab4}[{loadingSymbols[i % 4]}] Testing {url.ljust(maxWidth)}")
+                stdout.write(f"\r{Formatter.tab4} [{loadingSymbols[i % 4]}] Testing {url.ljust(maxWidth)}")
                 stdout.flush()
                 sleep(0.1)
                 i += 1
 
 
 
-        animationThread = Thread(target=animate)
+        animationThread = SafeThread(target=animate)
         animationThread.start()
 
 

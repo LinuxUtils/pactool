@@ -32,11 +32,17 @@ from subprocess import run, CalledProcessError, DEVNULL, PIPE
 from datetime import datetime
 from os import stat
 from re import search
+from urllib.request import urlopen, Request
+from urllib.parse import quote
+from json import loads as jsonLoads
+from time import sleep as timeSleep
+from sys import stdout as sysStdout
 
 
 # ==> PACTOOL FILES
 from core.logger import logError
 from core.formatter import Formatter
+from core.thread import SafeThread
 
 
 
@@ -1884,7 +1890,7 @@ class Packages:
 
 
 
-                suffix = " " + Formatter.colorText("(current)", Formatter.brightWhite, Formatter.bold) if isCurrent else ""
+                suffix = " " + Formatter.colorText("(Current)", Formatter.brightWhite, Formatter.bold) if isCurrent else ""
                 color = Formatter.green if isCurrent else Formatter.cyan
 
 
@@ -1921,7 +1927,7 @@ class Packages:
             for i, (ver, _) in enumerate(versions):
                 prefix = "└─ " if i == len(versions) - 1 else "├─ "
                 isCurrent = (ver == currentVer)
-                suffix = " " + Formatter.colorText("(current)", Formatter.brightWhite, Formatter.bold) if isCurrent else ""
+                suffix = " " + Formatter.colorText("(Current)", Formatter.brightWhite, Formatter.bold) if isCurrent else ""
                 color = Formatter.green if isCurrent else Formatter.cyan
                 print(f"{Formatter.tab8}{prefix}{Formatter.colorText(ver.ljust(leftMax), color)}{suffix}")
 
@@ -1942,3 +1948,212 @@ class Packages:
             for p in parts
         ]
         return " ".join(highlightedParts)
+
+
+
+
+
+
+
+
+
+
+    def versions(self, packageName: str, assessRisk: bool = False) -> None:
+        try:
+            # ==> CHECK IF PACKAGE EXISTS
+            if not self._packageExists(packageName):
+                print(Formatter.colorText(f"Package '{packageName}' not found.", Formatter.red))
+                return
+
+
+            # ==> DETERMINE PACKAGE COLOR
+            pkgColor = Formatter.packageColor if self._isUserPackage(packageName) else Formatter.systemPackageColor
+
+
+            # ==> COLLECT VERSIONS
+            versions = []
+            currentVer = None
+
+
+            ################################################################################
+            # ==> PACMAN IMPLEMENTATION
+            ################################################################################
+            if self.pactool.manager.defaultPackageManager == "pacman":
+                currentVer = run(["pacman", "-Q", packageName], capture_output=True, text=True).stdout.split()[1].strip()
+                repoData = run(["pacman", "-Ss", packageName], capture_output=True, text=True).stdout.splitlines()
+
+
+                for line in repoData:
+                    if "/" in line and packageName in line:
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            versions.append(parts[1].strip())
+
+
+
+            ################################################################################
+            # ==> APT IMPLEMENTATION
+            ################################################################################
+            elif self.pactool.manager.defaultPackageManager == "apt":
+                currentVer = run(["dpkg-query", "-W", "-f=${Version}", packageName], capture_output=True, text=True).stdout.strip()
+                repoData = run(["apt-cache", "madison", packageName], capture_output=True, text=True).stdout.splitlines()
+
+
+                for line in repoData:
+                    parts = line.split("|")
+                    if len(parts) >= 2:
+                        versions.append(parts[1].strip())
+
+
+
+            # ==> REMOVE DUPLICATES
+            versions = list(dict.fromkeys(versions))
+
+
+            if not versions:
+                print(f"{Formatter.colorText('No version data available.', Formatter.yellow)}")
+                return
+
+
+
+            ################################################################################
+            # ==> ASSESS RISK IF ENABLED
+            ################################################################################
+            riskInfo = []
+            
+            
+            if assessRisk:
+                assessingText = f"Assessing risk for '{packageName}'"
+                print(Formatter.colorText(assessingText, Formatter.brightYellow, Formatter.bold), end="", flush=True)
+
+
+                spinnerActive = True
+                spinnerChars = ['[|]', '[/]', '[-]', '[\\]']
+                spinnerIndex = 0
+
+
+                def spinner():
+                    nonlocal spinnerIndex
+                    while spinnerActive:
+                        sysStdout.write(f"\r{Formatter.colorText(assessingText + ' ' + spinnerChars[spinnerIndex % 4], Formatter.brightYellow, Formatter.bold)}")
+                        sysStdout.flush()
+                        spinnerIndex += 1
+                        timeSleep(0.1)
+
+
+
+                spinnerThread = SafeThread(target=spinner)
+                spinnerThread.start()
+
+
+
+                # ==> PERFORM RISK CALCULATIONS
+                for v in versions:
+                    riskLevel, vulnCount = self._getVulnerabilityInfo(packageName, v)
+                    riskInfo.append((v, riskLevel, vulnCount))
+
+
+
+                spinnerActive = False
+                spinnerThread.join()
+                print("\r" + " " * 60 + "\r", end="")
+
+            else:
+                riskInfo = [(v, "", 0) for v in versions]
+
+                    
+                    
+
+            ################################################################################
+            # ==> CALCULATE PADDING WIDTHS
+            ################################################################################
+            
+            maxVerLen = max(len(v[0]) for v in riskInfo)
+            maxRiskLen = max(len(v[1]) for v in riskInfo) if assessRisk else 0
+
+
+
+            ################################################################################
+            # ==> PRINT VERSION LIST
+            ################################################################################
+            
+            
+            # ==> PRINT HEADER
+            print(Formatter.colorText(f"\nAvailable Versions for '{packageName}':\n", Formatter.headerColor, Formatter.bold))
+            
+            
+            
+            for i, (ver, riskLevel, vulnCount) in enumerate(riskInfo):
+                prefix = "└─ " if i == len(riskInfo) - 1 else "├─ "
+                verColor = Formatter.green if ver == currentVer else Formatter.cyan
+                suffix = " " + Formatter.colorText("(Current)", Formatter.brightWhite, Formatter.bold) if ver == currentVer else ""
+
+
+                verPadding = " " * (maxVerLen - len(ver))
+                riskText = f" [{riskLevel}] {vulnCount} CVEs" if assessRisk else ""
+                riskPadding = " " * (maxRiskLen - len(riskLevel)) if assessRisk else ""
+
+
+                print(
+                    f"{Formatter.tab4}{prefix}"
+                    f"{Formatter.colorText(ver, verColor)}{verPadding}"
+                    f"{riskText}{riskPadding:2}"
+                    f"{suffix}"
+                )
+
+
+
+
+        except Exception as error:
+            logError(f"Failed to get versions for '{packageName}' ({error})")
+
+
+
+
+
+
+
+
+
+
+    def _getVulnerabilityInfo(self, packageName: str, version: str) -> tuple:
+        """
+        Returns (riskLevel, vulnCount) for a package version.
+        Uses the NVD API (no third-party libraries).
+        """
+        
+        
+        try:
+            # ==> BUILD QUERY URL
+            baseUrl = "https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch="
+            query = quote(f"{packageName} {version}")
+            url = f"{baseUrl}{query}"
+
+
+            # ==> SEND HTTP REQUEST
+            req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urlopen(req, timeout=10) as response:
+                data = jsonLoads(response.read().decode("utf-8"))
+
+
+            # ==> PARSE CVE COUNT
+            vulnCount = len(data.get("vulnerabilities", []))
+
+
+            # ==> DETERMINE RISK LEVEL
+            if vulnCount == 0:
+                riskLevel = Formatter.colorText("Low risk", Formatter.green, Formatter.bold)
+            elif vulnCount <= 5:
+                riskLevel = Formatter.colorText("Medium risk", Formatter.yellow, Formatter.bold)
+            else:
+                riskLevel = Formatter.colorText("High risk", Formatter.red, Formatter.bold)
+
+
+            return (riskLevel, vulnCount)
+
+
+
+        except Exception as error:
+            # ==> IF API FAILS, RETURN SAFE DEFAULT
+            return (Formatter.colorText("Unknown", Formatter.brightBlack, Formatter.bold), 0)
+
