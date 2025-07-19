@@ -42,7 +42,7 @@ from operations.packages import Packages
 from operations.services import Services
 from operations.mirrors import Mirrors
 from operations.kernels import Kernels
-
+from operations.security import Security
 
 
 
@@ -156,10 +156,15 @@ class PactoolArgumentParser(ArgumentParser):
             f"\n{Formatter.bold}{Formatter.yellow}KERNEL COMMANDS:{Formatter.reset}\n"
             "  --cleanup-kernels           Automatically remove old kernels\n"
             "  --backup-kernel             Backup the current running kernel to /boot/pactool/backup\n"
+            f"\n{Formatter.bold}{Formatter.yellow}SECURITY COMMANDS:{Formatter.reset}\n"
+            "  --upgrade-security          Upgrade only security-related packages (Debian/Ubuntu)\n"
+            "  --vuln-check PACKAGE        Check known CVEs (vulnerabilities) for a package\n"
+            "  --deep-search               Use with --vuln-check for detailed exploit tree and history\n"
+            "  --view-security-packages    View all installed security packages with details\n"
         )
-        
-        
+
         return helpText
+
     
     
     
@@ -202,6 +207,7 @@ class Main:
         self.services = Services(Pactool=self)
         self.mirrors = Mirrors(Pactool=self)
         self.kernels = Kernels(Pactool=self)
+        self.security = Security(Pactool=self)
         
         
 
@@ -246,6 +252,7 @@ class Main:
         parser.add_argument("--version", action="store_true", help="Show Pactool version and exit")
         parser.add_argument("--about", action="store_true", help="Display detailed information about Pactool")
 
+
         ##########################################################################
         #                                 PACKAGES                               #
         ##########################################################################
@@ -269,12 +276,14 @@ class Main:
         parser.add_argument("--unused", action="store_true", help="Find unused or orphaned packages")
         parser.add_argument("--outdated", action="store_true", help="List all outdated packages")
 
+
         ##########################################################################
         #                                 SERVICES                               #
         ##########################################################################
         parser.add_argument("--services", action="store_true", help="Show status of services related to packages")
         parser.add_argument("--service-info", metavar="SERVICE", help="Show detailed info about a service")
         parser.add_argument("--service-logs", metavar="SERVICE", help="Show logs of a service")
+
 
         ##########################################################################
         #                                  MIRRORS                               #
@@ -284,11 +293,38 @@ class Main:
         parser.add_argument("--revert-mirrors", action="store_true", help="Revert mirrors to previous backup")
         parser.add_argument("--backup-mirrors", action="store_true", help="Create a manual backup of the current mirror list")
 
+
         ##########################################################################
         #                              KERNEL COMMANDS                           #
         ##########################################################################
         parser.add_argument("--cleanup-kernels", action="store_true", help="Automatically remove old kernels")
         parser.add_argument("--backup-kernel", action="store_true", help="Backup the current running kernel to /boot/pactool/backup")
+
+
+        ##########################################################################
+        #                              SECURITY COMMANDS                         #
+        ##########################################################################
+        security = parser.add_argument_group("Security Commands")
+        security.add_argument(
+            "--upgrade-security",
+            action="store_true",
+            help="Upgrade only security-related packages (Debian/Ubuntu only)"
+        )
+        security.add_argument(
+            "--view-security-packages",
+            action="store_true",
+            help="View all installed security packages with install/update dates and size"
+        )
+        security.add_argument(
+            "--vuln-check",
+            metavar="PACKAGE",
+            help="Check known CVEs (vulnerabilities) for a package"
+        )
+        security.add_argument(
+            "--deep-search",
+            action="store_true",
+            help="Perform a deeper vulnerability analysis when used with --vuln-check"
+        )
 
         return parser
 
@@ -372,8 +408,17 @@ class Main:
                 self.kernels.cleanupKernels()
             elif args.backup_kernel:
                 self.kernels.backupKernel()
-
-
+                
+                
+            # ==> SECURITY COMMANDS
+            elif args.upgrade_security:
+                self.security.upgradeSecurity()
+            elif args.vuln_check:
+                self.security.vulnCheck(args.vuln_check, deepSearch=args.deep_search)
+            elif args.view_security_packages:
+                self.security.viewSecurityPackages()
+                
+                
             else:
                 self.baseMessage()
 

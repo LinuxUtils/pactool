@@ -55,7 +55,7 @@ class Kernels:
     def cleanupKernels(self, testMode: bool = False) -> None:
         try:
             # ==> PRINT HEADER
-            print(Formatter.colorText("\nCleaning up old kernels...\n", Formatter.headerColor, Formatter.bold))
+            print(Formatter.colorText("\nCleaning up old kernels [...]\n", Formatter.headerColor, Formatter.bold))
 
 
             # ==> GET CURRENTLY RUNNING KERNEL
@@ -97,10 +97,10 @@ class Kernels:
             elif self.pactool.manager.defaultPackageManager == "apt":
                 if testMode:
                     print(Formatter.colorText("APT old kernels found: linux-image-5.15, linux-image-6.1", Formatter.yellow))
-                    print(Formatter.colorText("Simulating removal of old kernels...", Formatter.yellow))
+                    print(Formatter.colorText("Simulating removal of old kernels [...]", Formatter.yellow))
                 else:
                     # ==> USE APT AUTOREMOVE BUT KEEP CURRENT KERNEL
-                    print(Formatter.colorText("Removing old kernels using apt autoremove...", Formatter.yellow))
+                    print(Formatter.colorText("Removing old kernels using apt autoremove [...]", Formatter.yellow))
                     run(["sudo", "apt-get", "autoremove", "--purge", "-y"], check=False)
 
 
@@ -119,7 +119,7 @@ class Kernels:
     def backupKernel(self, testMode: bool = False) -> None:
         try:
             # ==> PRINT HEADER
-            print(Formatter.colorText("\nBacking up current kernel...\n", Formatter.headerColor, Formatter.bold))
+            print(Formatter.colorText("\nBacking up current kernel [...]\n", Formatter.headerColor, Formatter.bold))
 
 
             # ==> GET CURRENT KERNEL VERSION

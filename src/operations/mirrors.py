@@ -195,13 +195,13 @@ class Mirrors:
 
             # ==> DETERMINE PACKAGE MANAGER AND RUN UPDATE
             if self.pactool.manager.defaultPackageManager == "apt":
-                print(Formatter.colorText("Updating APT mirrors to fastest ones...", Formatter.yellow, Formatter.bold))
+                print(Formatter.colorText("Updating APT mirrors to fastest ones [...]", Formatter.yellow, Formatter.bold))
                 run(["netselect-apt", "-n", "stable"], stdout=PIPE, stderr=PIPE, text=True)
                 print(Formatter.colorText("\nAPT mirrors updated. Check /etc/apt/sources.list for changes.", Formatter.green))
 
 
             elif self.pactool.manager.defaultPackageManager == "pacman":
-                print(Formatter.colorText("Updating Pacman mirrors to fastest ones...", Formatter.yellow, Formatter.bold))
+                print(Formatter.colorText("Updating Pacman mirrors to fastest ones [...]", Formatter.yellow, Formatter.bold))
                 run([
                     "reflector",
                     "--latest", "10",

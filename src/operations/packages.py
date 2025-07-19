@@ -1351,7 +1351,7 @@ class Packages:
         try:
             # ==> CLEAN APT PACKAGE CACHE
             if self.pactool.manager.defaultPackageManager == "apt":
-                print(Formatter.colorText("Cleaning APT package cache...", Formatter.yellow, Formatter.bold))
+                print(Formatter.colorText("Cleaning APT package cache [...]", Formatter.yellow, Formatter.bold))
                 run(["sudo", "apt-get", "clean"], stdout=DEVNULL, stderr=DEVNULL, check=False)
                 run(["sudo", "apt-get", "autoremove", "-y"], stdout=DEVNULL, stderr=DEVNULL, check=False)
                 print(Formatter.colorText("\nAPT package cache cleaned.", Formatter.green, Formatter.bold))
@@ -1359,7 +1359,7 @@ class Packages:
 
             # ==> CLEAN PACMAN PACKAGE CACHE
             elif self.pactool.manager.defaultPackageManager == "pacman":
-                print(Formatter.colorText("Cleaning Pacman package cache...", Formatter.yellow, Formatter.bold))
+                print(Formatter.colorText("Cleaning Pacman package cache [...]", Formatter.yellow, Formatter.bold))
                 run(["sudo", "pacman", "-Scc", "--noconfirm"], stdout=DEVNULL, stderr=DEVNULL, check=False)
                 print(Formatter.colorText("\nPacman package cache cleaned.", Formatter.green, Formatter.bold))
 
@@ -1465,7 +1465,7 @@ class Packages:
     def bloat(self, limit: int = None) -> None:
         try:
             # ==> PRINT HEADER
-            print(Formatter.colorText("\nAnalyzing for bloat (unused optional dependencies)...\n", Formatter.headerColor, Formatter.bold))
+            print(Formatter.colorText("\nAnalyzing for bloat (unused optional dependencies) [...]\n", Formatter.headerColor, Formatter.bold))
 
 
 
@@ -1546,7 +1546,7 @@ class Packages:
     def unused(self, limit: int = None) -> None:
         try:
             # ==> PRINT HEADER
-            print(Formatter.colorText("\nFinding unused (Orphan) packages...\n", Formatter.headerColor, Formatter.bold))
+            print(Formatter.colorText("\nFinding unused (Orphan) packages [...]\n", Formatter.headerColor, Formatter.bold))
 
 
             # ==> CHECK FOR PACMAN PACKAGE MANAGER
@@ -1605,7 +1605,7 @@ class Packages:
     def outdated(self, limit: int = None) -> None:
         try:
             # ==> PRINT HEADER
-            print(Formatter.colorText("\nChecking for outdated packages...\n", Formatter.headerColor, Formatter.bold))
+            print(Formatter.colorText("\nChecking for outdated packages [...]\n", Formatter.headerColor, Formatter.bold))
 
 
             outdatedPkgs = []
@@ -1637,7 +1637,7 @@ class Packages:
 
                 for line in result.stdout.splitlines():
                     # ==> SKIP HEADERS
-                    if "Listing..." in line:
+                    if "Listing [...]" in line:
                         continue
                     
                     
