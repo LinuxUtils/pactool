@@ -1,4 +1,4 @@
-# Code of Conduct
+![PACTOOL GUIDELINES BANNER](https://github.com/LinuxUtils/paktool/blob/main/graphics/PACTOOL_GUIDELINES_BANNER.png?raw=true)
 
 ## Our Pledge
 We, the maintainers and contributors of **LinuxUtils** and its projects (including **Pactool**), pledge to foster an open, welcoming, and collaborative environment.  
