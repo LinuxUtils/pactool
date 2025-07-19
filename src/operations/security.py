@@ -405,7 +405,7 @@ class Security:
 
 
                     if not filtered:
-                        print(Formatter.colorText(f"No CVEs matched \"{searchKeyword}\".\n", Formatter.red))
+                        print(Formatter.colorText(f"\nNo CVEs matched \"{searchKeyword}\".\n", Formatter.red))
                         searchKeyword = input(Formatter.colorText("--> Enter new keyword or leave blank to show all: ", Formatter.cyan)).strip()
                         if not searchKeyword:
                             filtered = cves
