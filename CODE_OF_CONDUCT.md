@@ -5,7 +5,7 @@
 #### The purpose of this Code of Conduct is to ensure a safe and positive environment across all LinuxUtils projects.
 
 
-We, the maintainers and contributors of **LinuxUtils** and its projects (including **Pactool**), pledge to foster an open, welcoming, and collaborative environment.  
+We, the maintainers and contributors of **LinuxUtils** and its projects, pledge to foster an open, welcoming, and collaborative environment.  
 Our goal is to create free and open-source Linux tools that benefit everyone, and we are committed to ensuring that all contributors and users feel respected and included.
 
 We pledge to make participation in our community a harassment-free experience for everyone, regardless of:
