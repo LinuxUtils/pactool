@@ -303,6 +303,8 @@ PACKAGE COMMANDS:
   --bloat                     Find unused optional dependencies (bloat)
   --unused                    Find unused or orphaned packages
   --outdated                  List all outdated packages
+  --history PACKAGE           Show version history and updates of a package
+  --versions PACKAGE          Show all available versions of a package with risk levels
 
 SERVICE COMMANDS:
   --services                  Show status of services related to packages
