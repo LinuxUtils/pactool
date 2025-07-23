@@ -1,61 +1,78 @@
-#!/bin/bash
-# ==> AUTOMATED AUR RELEASE SCRIPT FOR PACTOOL
+#!/usr/bin/env bash
 
-set -e
 
-# ==> CHECK ARGUMENT
-if [ -z "$1" ]; then
-    echo "Usage: ./release-to-aur.sh <new-version>"
-    exit 1
-fi
+set -euo pipefail
 
-NEW_VERSION="$1"
+
+################################# CONFIG #################################
 PKGNAME="pactool"
-TARBALL="$PKGNAME-$NEW_VERSION.tar.gz"
-URL="https://github.com/LinuxUtils/$PKGNAME/archive/refs/tags/v$NEW_VERSION.tar.gz"
+AUR_REMOTE_NAME="aur"
+AUR_URL="ssh://aur@aur.archlinux.org/${PKGNAME}.git"
+##########################################################################
 
-echo "==> Updating AUR package to version $NEW_VERSION..."
 
-# ==> ENSURE WE ARE IN A GIT REPO
-if [ ! -d ".git" ]; then
-    echo "ERROR: This directory is not a git repository. Clone from AUR first:"
-    echo "  git clone ssh://aur@aur.archlinux.org/pactool.git"
-    exit 1
+usage() { echo "Usage: $0 <new-version>"; exit 1; }
+[[ $# -eq 1 ]] || usage
+NEW_VER="$1"
+
+
+TARBALL="${PKGNAME}-${NEW_VER}.tar.gz"
+TARBALL_URL="https://github.com/LinuxUtils/${PKGNAME}/archive/refs/tags/v${NEW_VER}.tar.gz"
+
+
+echo "==> Releasing ${PKGNAME} v${NEW_VER} to AUR…"
+
+
+[[ -d .git ]] || { echo "Run inside a git repo cloned from anywhere."; exit 1; }
+
+
+if ! git remote | grep -qx "${AUR_REMOTE_NAME}"; then
+  git remote add "${AUR_REMOTE_NAME}" "${AUR_URL}"
+else
+  git remote set-url "${AUR_REMOTE_NAME}" "${AUR_URL}"
 fi
 
-# ==> CLEAN OLD TARBALLS
-echo "==> Cleaning old tarballs..."
-rm -f $PKGNAME-*.tar.gz
 
-# ==> UPDATE PKGBUILD VERSION
-echo "==> Updating pkgver in PKGBUILD..."
-sed -i "s/^pkgver=.*/pkgver=$NEW_VERSION/" PKGBUILD
+echo "==> Syncing with AUR…"
+git fetch "${AUR_REMOTE_NAME}" master
+git rebase "${AUR_REMOTE_NAME}/master"
 
-# ==> DOWNLOAD NEW TARBALL
-echo "==> Downloading $TARBALL..."
-curl -L -o "$TARBALL" "$URL"
 
-# ==> GENERATE SHA256SUM
-echo "==> Generating sha256sum..."
-sha256=$(sha256sum "$TARBALL" | awk '{print $1}')
-sed -i "s/^sha256sums=.*/sha256sums=('$sha256')/" PKGBUILD
-echo "    -> New sha256sum: $sha256"
+# ------------------------------------------------------------------------------
+# Update PKGBUILD
+# ------------------------------------------------------------------------------
+echo "==> Updating PKGBUILD…"
+sed -i "s/^pkgver=.*/pkgver=${NEW_VER}/" PKGBUILD
 
-# ==> REGENERATE .SRCINFO
-echo "==> Generating .SRCINFO..."
+
+echo "==> Cleaning old tarballs…"
+rm -f "${PKGNAME}-"*.tar.gz
+
+
+echo "==> Downloading ${TARBALL}…"
+curl -Lf -o "${TARBALL}" "${TARBALL_URL}"
+
+
+echo "==> Generating sha256sum…"
+SHA=$(sha256sum "${TARBALL}" | awk '{print $1}')
+sed -i "s/^sha256sums=.*/sha256sums=('${SHA}')/" PKGBUILD
+echo "    -> ${SHA}"
+
+
+echo "==> Regenerating .SRCINFO…"
 makepkg --printsrcinfo > .SRCINFO
 
-# ==> TEST BUILD LOCALLY
-echo "==> Testing local build..."
+
+echo "==> Local build test…"
 makepkg -si --noconfirm
 
-# ==> COMMIT CHANGES
-echo "==> Committing changes..."
+
 git add PKGBUILD .SRCINFO
-git commit -m "Release $PKGNAME v$NEW_VERSION"
+git commit -m "AUR release ${PKGNAME} v${NEW_VER}" || echo "No new changes to commit."
 
-# ==> PUSH TO AUR
-echo "==> Pushing to AUR..."
-git push
 
-echo "==> AUR release completed for $PKGNAME v$NEW_VERSION."
+echo "==> Pushing to AUR…"
+git push "${AUR_REMOTE_NAME}" HEAD:master
+
+
+echo "==> Done! AUR now has ${PKGNAME} v${NEW_VER}"
