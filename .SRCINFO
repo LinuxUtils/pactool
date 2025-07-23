@@ -1,12 +1,12 @@
 pkgbase = pactool
 	pkgdesc = A versatile package management helper for Arch and Debian-based systems.
-	pkgver = 1.0.4
+	pkgver = 1.0.4.1
 	pkgrel = 1
 	url = https://github.com/LinuxUtils/pactool
 	arch = any
 	license = Apache
 	depends = python
-	source = pactool-1.0.4.tar.gz::https://github.com/LinuxUtils/pactool/archive/refs/tags/v1.0.4.tar.gz
-	sha256sums = e6fc9400cc4261656f71bd298d7c341b20487197da7abed33f01d7fe1c1c4719
+	source = pactool-1.0.4.1.tar.gz::https://github.com/LinuxUtils/pactool/archive/refs/tags/v1.0.4.1.tar.gz
+	sha256sums = 561f850b7652086cb0cda89fe17ccbbb9ca4dc1bb05e7d7887d45f4fb2327fc7
 
 pkgname = pactool

@@ -1,5 +1,5 @@
 pkgname=pactool
-pkgver=1.0.4
+pkgver=1.0.4.1
 pkgrel=1
 pkgdesc="A versatile package management helper for Arch and Debian-based systems."
 arch=('any')
@@ -7,7 +7,7 @@ url="https://github.com/LinuxUtils/pactool"
 license=('Apache')
 depends=('python')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('e6fc9400cc4261656f71bd298d7c341b20487197da7abed33f01d7fe1c1c4719')
+sha256sums=('561f850b7652086cb0cda89fe17ccbbb9ca4dc1bb05e7d7887d45f4fb2327fc7')
 
 
 package() {
