@@ -19,7 +19,7 @@
 
 
 # What is Pactool?
-#### PacTool is a versatile, simple, and powerful package management helper designed for **Arch Linux** and **Debian-based distributions**. It provides a clear and modern overview of all installed packages, their sizes, and dependencies, and offers various tools to optimize and maintain your system efficiently.
+#### Pactool is a versatile, simple, and powerful package management helper designed for **Arch Linux** and **Debian-based distributions**. It provides a clear and modern overview of all installed packages, their sizes, and dependencies, and offers various tools to optimize and maintain your system efficiently.
 
 ---
 
@@ -229,7 +229,7 @@ Cleans package cache and prompts before deleting.
 
 ## **Security Management**
 
-PacTool offers built-in tools to manage and check for security vulnerabilities.
+Pactool offers built-in tools to manage and check for security vulnerabilities.
 
 ### **View Security Packages**
 Check for installed security-related packages on Debian/Ubuntu or run a security audit on Arch Linux:
@@ -363,13 +363,13 @@ Available Versions for 'python':
 
 **How the risk score works**
 
-| CVE Count | Label & Colour | Typical action |
+| CVE Count | Label | Typical action |
 |-----------|----------------|----------------|
-| 0 | **LOW RISK** 🟢 | Safe to use / keep. |
-| 1 – 5 | **MEDIUM RISK** 🟡 | Read CVE details; upgrade soon. |
-| > 5 | **HIGH RISK** 🔴 | Patch or pin a safer version ASAP (or get exploited, idc either way). |
+| 0 | **LOW RISK** | Safe to use / keep. |
+| 1 – 5 | **MEDIUM RISK** | Read CVE details; upgrade soon. |
+| > 5 | **HIGH RISK** | Patch or pin a safer version ASAP (or get exploited, idc either way). |
 
-> NVD API is rate‑limited (5 req / 30 s). PacTool caches results per session to avoid throttling.
+> NVD API is rate‑limited (5 req / 30 s). Pactool caches results per session to avoid throttling.
 
 
 ---
