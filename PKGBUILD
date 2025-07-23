@@ -7,7 +7,7 @@ url="https://github.com/LinuxUtils/pactool"
 license=('Apache')
 depends=('python')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums('')
+sha256sums=('e6fc9400cc4261656f71bd298d7c341b20487197da7abed33f01d7fe1c1c4719')
 
 
 package() {
