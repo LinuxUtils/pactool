@@ -62,7 +62,7 @@ from operations.security import Security
 ##########################################################################
 class Version:
     description = "A cross-distro package management helper for Linux systems."
-    release = "1.0.3"
+    release = "1.0.4"
     releaseDate = "23/7/2025"
 
 
