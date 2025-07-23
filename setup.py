@@ -35,7 +35,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pactool-linuxutils",
-    version="1.0.4.1",
+    version="1.0.4.2",
     author="LinuxUtils",
     author_email="thelinuxutils@gmail.com",
     description="A cross-distro package management helper for Linux systems.",

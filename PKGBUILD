@@ -1,5 +1,5 @@
 pkgname=pactool
-pkgver=1.0.4.1
+pkgver=1.0.4.2
 pkgrel=1
 pkgdesc="A versatile package management helper for Arch and Debian-based systems."
 arch=('any')
