@@ -62,6 +62,13 @@ class Mirrors:
         self.pactool = Pactool
         self.mirrorsUp = 0
         self.mirrorsDown = 0
+        self.responseTimes = []
+
+
+        # ==> RESPONSE TIME SPEEDS
+        self.fastResponseTime = 1000
+        self.goodResponseTime = 2000
+        self.mediumResponseTime = 5000
 
 
 
@@ -73,6 +80,7 @@ class Mirrors:
     ######################################################################
     def showMirrors(self) -> None:
         try:
+            self.responseTimes = []
             mirrors = []
             
             
@@ -80,10 +88,14 @@ class Mirrors:
                 print(Formatter.colorText("  -> Current APT Mirrors", Formatter.headerColor, Formatter.bold))
                 with open("/etc/apt/sources.list", "r") as f:
                     mirrors = [line.split()[1] for line in f if line.strip().startswith("deb")]
+
+
             elif self.pactool.manager.defaultPackageManager == "pacman":
                 print(Formatter.colorText("  -> Current Pacman Mirrors", Formatter.headerColor, Formatter.bold))
                 with open("/etc/pacman.d/mirrorlist", "r") as f:
                     mirrors = [line.split("=")[1].strip() for line in f if line.strip().startswith("Server")]
+
+
             else:
                 print(Formatter.colorText("No supported package manager found.", Formatter.red))
                 return
@@ -114,6 +126,39 @@ class Mirrors:
                     Formatter.yellow, Formatter.bold
                 ))
 
+
+
+            # ==> AVERAGE RESPONSE TIME
+            if self.responseTimes:
+                avgTime = sum(self.responseTimes) / len(self.responseTimes)
+
+                # ==> VERY FAST RESPONSE TIME
+                if avgTime <= self.fastResponseTime:
+                    print(Formatter.colorText(
+                        f"\nAverage Response Time [{avgTime:.2f} MS] [Fast]",
+                        Formatter.green, Formatter.bold
+                    ))
+
+                # ==> GOOD RESPONSE TIME
+                elif avgTime <= self.goodResponseTime:
+                    print(Formatter.colorText(
+                        f"\nAverage Response Time [{avgTime:.2f} MS] [Good]",
+                        Formatter.green, Formatter.bold
+                    ))
+
+                # ==> MEDIUM RESPONSE TIME
+                elif avgTime <= self.mediumResponseTime:
+                    print(Formatter.colorText(
+                        f"\nAverage Response Time [{avgTime:.2f} MS] [Medium]",
+                        Formatter.yellow, Formatter.bold
+                ))
+
+            # ==> SLOW RESPONSE TIME
+            else:
+                print(Formatter.colorText(
+                    f"\nAverage Response Time [{avgTime:.2f} MS] [Slow]",
+                    Formatter.red, Formatter.bold
+                ))
 
         except Exception as error:
             logError(f"Failed to show mirrors ({error})")
@@ -162,12 +207,25 @@ class Mirrors:
             timeStr = f"{elapsed:.2f} ms".rjust(16)
 
 
+            # ==> CHOOSE COLOR BASED ON SPEED
+            if elapsed <= self.fastResponseTime:
+                timeColor = Formatter.green
+            elif elapsed <= self.goodResponseTime:
+                timeColor = Formatter.green
+            elif elapsed <= self.mediumResponseTime:
+                timeColor = Formatter.yellow
+            else:
+                timeColor = Formatter.red
+
+
+
             stdout.write(
                 f"\r{Formatter.colorText('[✔]', Formatter.green, Formatter.bold)}  "
                 f"{url.ljust(maxWidth)}  "
-                f"{Formatter.colorText(timeStr, Formatter.green)}    "
-                f"(Last Updated: {lastModified})\n"
+                f"{Formatter.colorText(timeStr, timeColor)}\n"
+                f"{' ' * 5}(Last Updated: {lastModified})\n\n"
             )
+            self.responseTimes.append(elapsed)
             self.mirrorsUp += 1
 
 
